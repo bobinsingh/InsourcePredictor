@@ -5,6 +5,7 @@ import io
 from fastapi.responses import StreamingResponse
 import openpyxl
 from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
 from logic.decision_rules import determine_outcome
 
@@ -86,7 +87,7 @@ async def determine_outcomes(request: DecisionRequest):
 @router.post("/export-excel")
 async def export_to_excel(request: DecisionRequest):
     """
-    Generate Excel file with inputs and outcomes using openpyxl instead of pandas
+    Generate Excel file with inputs and outcomes using openpyxl
     """
     # Process inputs to determine outcomes
     results = []
@@ -104,7 +105,25 @@ async def export_to_excel(request: DecisionRequest):
     ws = wb.active
     ws.title = "Sourcing Decisions"
     
-    # Add headers
+    # Define column headers with friendly names
+    headers_dict = {
+        "activity_name": "Activity Name", 
+        "activity_type": "Activity Type", 
+        "core": "Core Activity", 
+        "legal_requirement": "Legal Requirement", 
+        "risks": "Significant Risks", 
+        "risk_tolerance": "Risk Tolerance", 
+        "frequency": "Frequency", 
+        "specialised_skill": "Specialized Skills Required", 
+        "similarity_with_scopes": "Similarity with Current Scopes", 
+        "skill_capacity": "Existing Skill Capacity", 
+        "duration": "Duration", 
+        "affordability": "Affordability", 
+        "strategic_fit": "Strategic Fit", 
+        "outcome": "Outcome"
+    }
+    
+    # Define column order
     headers = [
         "activity_name", "activity_type", "core", "legal_requirement", 
         "risks", "risk_tolerance", "frequency", "specialised_skill", 
@@ -112,13 +131,80 @@ async def export_to_excel(request: DecisionRequest):
         "affordability", "strategic_fit", "outcome"
     ]
     
+    # Add headers with styling
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="4F81BD", end_color="4F81BD", fill_type="solid")
+    
     for col_idx, header in enumerate(headers, 1):
-        ws.cell(row=1, column=col_idx, value=header)
+        cell = ws.cell(row=1, column=col_idx, value=headers_dict[header])
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal="center", vertical="center")
     
     # Add data
     for row_idx, result in enumerate(results, 2):
         for col_idx, header in enumerate(headers, 1):
-            ws.cell(row=row_idx, column=col_idx, value=result.get(header, ""))
+            cell = ws.cell(row=row_idx, column=col_idx, value=result.get(header, ""))
+            
+            # Color the outcome cell based on the value
+            if header == "outcome":
+                if result[header] == "Eliminate":
+                    cell.fill = PatternFill(start_color="FFCCCC", end_color="FFCCCC", fill_type="solid")
+                elif result[header] == "Current Outsource":
+                    cell.fill = PatternFill(start_color="CCE5FF", end_color="CCE5FF", fill_type="solid")
+                elif result[header] == "New Outsource":
+                    cell.fill = PatternFill(start_color="FFFFCC", end_color="FFFFCC", fill_type="solid")
+                elif result[header] == "Insource or create in-house capacity":
+                    cell.fill = PatternFill(start_color="CCFFCC", end_color="CCFFCC", fill_type="solid")
+    
+    # Auto-adjust column width
+    for col in ws.columns:
+        max_length = 0
+        column = col[0].column_letter
+        for cell in col:
+            if cell.value:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+        adjusted_width = (max_length + 2) * 1.2
+        ws.column_dimensions[column].width = adjusted_width
+    
+    # Add explanatory notes as a separate sheet
+    notes_sheet = wb.create_sheet(title="Field Descriptions")
+    
+    # Add field descriptions
+    field_descriptions = {
+        "Core Activity": "Core activities are essential to your organization's primary mission and competitive advantage",
+        "Legal Requirement": "Activities required by law, regulation, or contract that cannot be eliminated",
+        "Significant Risks": "Consider reputational, operational, financial, or compliance risks associated with this activity",
+        "Risk Tolerance": "Your organization's willingness to accept the identified risks",
+        "Frequency": "How often the activity is performed (Inside = within your organization, Outside = external to your operations)",
+        "Specialized Skills Required": "Whether the activity requires specialized expertise or capabilities that are difficult to develop internally",
+        "Similarity with Current Scopes": "How similar this activity is to your organization's existing operations and capabilities",
+        "Existing Skill Capacity": "Whether your organization already has the necessary skills and resources to perform this activity",
+        "Duration": "The expected timeframe for this activity (Short = temporary or project-based, Long = ongoing or permanent)",
+        "Affordability": "Whether your organization can afford to develop or maintain this capability internally",
+        "Strategic Fit": "How well this activity aligns with your organization's long-term strategic objectives",
+        "Outcome": "The recommended sourcing strategy based on all factors"
+    }
+    
+    # Add header
+    notes_sheet["A1"] = "Field"
+    notes_sheet["B1"] = "Description"
+    notes_sheet["A1"].font = header_font
+    notes_sheet["B1"].font = header_font
+    notes_sheet["A1"].fill = header_fill
+    notes_sheet["B1"].fill = header_fill
+    
+    # Add descriptions
+    row = 2
+    for field, description in field_descriptions.items():
+        notes_sheet[f"A{row}"] = field
+        notes_sheet[f"B{row}"] = description
+        row += 1
+    
+    # Adjust column width
+    notes_sheet.column_dimensions["A"].width = 30
+    notes_sheet.column_dimensions["B"].width = 100
     
     # Save to a BytesIO object
     output = io.BytesIO()

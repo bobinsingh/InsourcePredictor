@@ -29,6 +29,28 @@ const ResultsDisplay = ({ results, onBackToForm, onExportExcel }) => {
     { name: 'Strategic Fit', selector: row => row.strategic_fit, sortable: true },
     { name: 'Outcome', selector: row => row.outcome, sortable: true }
   ];
+
+  // Helper function to get the CSS class for each outcome type
+  const getOutcomeClass = (outcome) => {
+    const normalized = outcome.toLowerCase().replace(/\s+/g, '-');
+    return normalized;
+  };
+  
+  // Helper function to get description for each outcome
+  const getOutcomeDescription = (outcome) => {
+    switch(outcome) {
+      case 'Eliminate':
+        return 'This activity should be discontinued';
+      case 'Current Outsource':
+        return 'Continue with existing outsourcing arrangement';
+      case 'New Outsource':
+        return 'Find a new outsourcing partner for this activity';
+      case 'Insource or create in-house capacity':
+        return 'Bring this activity in-house or develop internal capacity';
+      default:
+        return 'Further analysis required';
+    }
+  };
   
   return (
     <div className="results-display">
@@ -36,8 +58,9 @@ const ResultsDisplay = ({ results, onBackToForm, onExportExcel }) => {
       
       <div className="results-summary">
         {Object.entries(resultsByOutcome).map(([outcome, items]) => (
-          <div key={outcome} className={`outcome-card ${outcome.toLowerCase().replace(/\s+/g, '-')}`}>
+          <div key={outcome} className={`outcome-card ${getOutcomeClass(outcome)}`}>
             <h3>{outcome}</h3>
+            <p>{getOutcomeDescription(outcome)}</p>
             <p>{items.length} {items.length === 1 ? 'Activity' : 'Activities'}</p>
             <ul>
               {items.map((item, index) => (

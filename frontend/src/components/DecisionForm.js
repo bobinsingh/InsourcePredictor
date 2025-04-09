@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import FormNavigation from './FormNavigation';
+import Tooltip from './Tooltip';
 
 const DecisionForm = ({ activities, onAddActivity, onRemoveActivity, onInputChange, onSubmit }) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -20,13 +21,29 @@ const DecisionForm = ({ activities, onAddActivity, onRemoveActivity, onInputChan
     legal_requirement: 'Is this a Legal Requirement?',
     risks: 'Are there Significant Risks?',
     risk_tolerance: 'Risk Tolerance',
-    frequency: 'Frequency (Inside/Outside, High/Low)',
-    specialised_skill: 'Does this require Specialized Skills?',
+    frequency: 'Frequency',
+    specialised_skill: 'Specialized Skills Required',
     similarity_with_scopes: 'Similarity with Current Scopes',
-    skill_capacity: 'Do we have Existing Skill Capacity?',
-    duration: 'Duration (Short/Long term)',
-    affordability: 'Affordability & Transferable Skill',
-    strategic_fit: 'Strategic Fit and Business Case'
+    skill_capacity: 'Existing Skill Capacity',
+    duration: 'Duration',
+    affordability: 'Affordability',
+    strategic_fit: 'Strategic Fit'
+  };
+  
+  const fieldTooltips = {
+    activity_name: 'Enter a descriptive name for this activity or service',
+    activity_type: 'Specify the type or category of this activity',
+    core: 'Core activities are essential to your organization\'s primary mission and competitive advantage',
+    legal_requirement: 'Activities required by law, regulation, or contract that cannot be eliminated',
+    risks: 'Consider reputational, operational, financial, or compliance risks associated with this activity',
+    risk_tolerance: 'Your organization\'s willingness to accept the identified risks',
+    frequency: 'How often the activity is performed (Inside = within your organization, Outside = external to your operations)',
+    specialised_skill: 'Whether the activity requires specialized expertise or capabilities that are difficult to develop internally',
+    similarity_with_scopes: 'How similar this activity is to your organization\'s existing operations and capabilities',
+    skill_capacity: 'Whether your organization already has the necessary skills and resources to perform this activity',
+    duration: 'The expected timeframe for this activity (Short = temporary or project-based, Long = ongoing or permanent)',
+    affordability: 'Whether your organization can afford to develop or maintain this capability internally',
+    strategic_fit: 'How well this activity aligns with your organization\'s long-term strategic objectives'
   };
   
   const options = {
@@ -34,7 +51,7 @@ const DecisionForm = ({ activities, onAddActivity, onRemoveActivity, onInputChan
     legal_requirement: ['Yes', 'No', ''],
     risks: ['Yes', 'No', ''],
     risk_tolerance: ['Yes', 'No', ''],
-    frequency: ['Inside', 'Outside', 'High', 'Low'],
+    frequency: ['Inside', 'Outside'],
     specialised_skill: ['Yes', 'No', 'High', 'Low'],
     similarity_with_scopes: ['Yes', 'No'],
     skill_capacity: ['Yes', 'No'],
@@ -66,14 +83,13 @@ const DecisionForm = ({ activities, onAddActivity, onRemoveActivity, onInputChan
     setCurrentStep(1);
   };
   
-  // Ensure we have a valid activity - add a guard clause
+  // Ensure we have a valid activity
   if (!activities || activities.length === 0 || currentActivityIndex >= activities.length) {
     return <div>Loading activities...</div>;
   }
   
   const currentActivity = activities[currentActivityIndex];
   
-  // Add another guard clause to make sure currentActivity exists
   if (!currentActivity) {
     return <div>Error: No activity found at index {currentActivityIndex}</div>;
   }
@@ -89,7 +105,7 @@ const DecisionForm = ({ activities, onAddActivity, onRemoveActivity, onInputChan
           <div className="activity-tabs">
             {activities.map((activity, index) => (
               <button 
-                key={index} // Changed from activity.id to index to avoid potential issues
+                key={index}
                 className={`activity-tab ${index === currentActivityIndex ? 'active' : ''}`}
                 onClick={() => handleSkipToActivity(index)}
               >
@@ -103,7 +119,10 @@ const DecisionForm = ({ activities, onAddActivity, onRemoveActivity, onInputChan
       <div className="form-body">
         {currentFields.map(field => (
           <div key={field} className="form-group">
-            <label>{fieldLabels[field]}</label>
+            <div className="field-header">
+              <label>{fieldLabels[field]}</label>
+              <Tooltip content={fieldTooltips[field]} />
+            </div>
             
             {field === 'activity_name' || field === 'activity_type' ? (
               <input

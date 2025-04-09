@@ -1,10 +1,7 @@
 import React, { useState } from 'react';
-// Import axios after installing it
 import axios from 'axios';
-// Make sure the path to components is correct
 import DecisionForm from './components/DecisionForm';
 import ResultsDisplay from './components/ResultsDisplay';
-// Import the CSS (make sure path is correct)
 import './styles/styles.css';
 
 const API_BASE_URL = 'http://localhost:8000/api/decision';
@@ -64,14 +61,31 @@ function App() {
   
   const handleSubmit = async () => {
     try {
+      // Validate all required fields are filled
+      const missingFields = activities.some(activity => 
+        !activity.core || 
+        !activity.frequency || 
+        !activity.specialised_skill || 
+        !activity.similarity_with_scopes || 
+        !activity.skill_capacity || 
+        !activity.duration || 
+        !activity.affordability || 
+        !activity.strategic_fit
+      );
+      
+      if (missingFields) {
+        alert('Please fill in all required fields for each activity before submitting.');
+        return;
+      }
+      
       const requestData = {
         inputs: activities.map(activity => ({
-          activity_name: activity.activity_name,
-          activity_type: activity.activity_type,
+          activity_name: activity.activity_name || 'Unnamed Activity',
+          activity_type: activity.activity_type || '',
           core: activity.core,
-          legal_requirement: activity.legal_requirement,
-          risks: activity.risks,
-          risk_tolerance: activity.risk_tolerance,
+          legal_requirement: activity.legal_requirement || '',
+          risks: activity.risks || '',
+          risk_tolerance: activity.risk_tolerance || '',
           frequency: activity.frequency,
           specialised_skill: activity.specialised_skill,
           similarity_with_scopes: activity.similarity_with_scopes,
@@ -99,12 +113,12 @@ function App() {
     try {
       const requestData = {
         inputs: activities.map(activity => ({
-          activity_name: activity.activity_name,
-          activity_type: activity.activity_type,
+          activity_name: activity.activity_name || 'Unnamed Activity',
+          activity_type: activity.activity_type || '',
           core: activity.core,
-          legal_requirement: activity.legal_requirement,
-          risks: activity.risks,
-          risk_tolerance: activity.risk_tolerance,
+          legal_requirement: activity.legal_requirement || '',
+          risks: activity.risks || '',
+          risk_tolerance: activity.risk_tolerance || '',
           frequency: activity.frequency,
           specialised_skill: activity.specialised_skill,
           similarity_with_scopes: activity.similarity_with_scopes,
@@ -144,6 +158,7 @@ function App() {
     <div className="app-container">
       <header className="app-header">
         <h1>Sourcing Decision Tool</h1>
+        <p>Determine optimal sourcing strategies based on multiple factors</p>
       </header>
       
       <main className="app-main">

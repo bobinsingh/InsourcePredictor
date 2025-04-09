@@ -1,0 +1,54 @@
+/* Tooltip styles */
+.tooltip-container {
+    display: inline-block;
+    position: relative;
+    margin-left: 8px;
+  }
+  
+  .tooltip-button {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .tooltip-content {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 4px;
+    width: 250px;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  
+  .tooltip-content::before {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 0 6px 6px 6px;
+    border-style: solid;
+    border-color: transparent transparent #333 transparent;
+  }
+  
+  .form-group .field-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+  }
