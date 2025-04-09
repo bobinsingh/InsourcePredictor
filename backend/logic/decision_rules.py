@@ -195,8 +195,72 @@ def determine_outcome(data: Dict[str, Any]) -> str:
         (core == "Yes" or legal_requirement == "Yes")):
         return "Insource or create in-house capacity"
         
-    # Step 3: Check if we have existing capacity
+    # Step 3: Check Current Outsource conditions - MUST match Excel formula exactly
+    if (frequency_excel == "Yes" and risk_tolerance == "Outside" and 
+        specialised_skill_excel == "Low" and skill_capacity == "Yes"):
+        return "Current Outsource"
+        
+    if (frequency_excel == "Yes" and risk_tolerance == "Outside" and 
+        specialised_skill_excel == "High" and similarity_with_current_scopes == "No" and 
+        skill_capacity == "Yes"):
+        return "Current Outsource"
+        
+    if (frequency_excel == "Yes" and risk_tolerance == "Outside" and 
+        specialised_skill_excel == "High" and similarity_with_current_scopes == "Yes" and 
+        risks == "No" and duration == "Short" and skill_capacity == "Yes"):
+        return "Current Outsource"
+        
+    if (frequency_excel == "Yes" and risk_tolerance == "Outside" and 
+        specialised_skill_excel == "High" and similarity_with_current_scopes == "Yes" and 
+        risks == "No" and duration == "Long" and (strategic_fit == "No" or affordability == "No") and 
+        skill_capacity == "Yes"):
+        return "Current Outsource"
+        
+    if (frequency_excel == "Yes" and risk_tolerance == "Outside" and 
+        specialised_skill_excel == "High" and similarity_with_current_scopes == "Yes" and 
+        risks == "Yes" and (strategic_fit == "No" or affordability == "No") and 
+        skill_capacity == "Yes"):
+        return "Current Outsource"
+        
+    # Step 4: Check New Outsource conditions - MUST match Excel formula exactly
+    if (frequency_excel == "Yes" and risk_tolerance == "Outside" and 
+        specialised_skill_excel == "Low" and skill_capacity == "No"):
+        return "New Outsource"
+        
+    if (frequency_excel == "Yes" and risk_tolerance == "Outside" and 
+        specialised_skill_excel == "High" and similarity_with_current_scopes == "No" and 
+        skill_capacity == "No"):
+        return "New Outsource"
+        
+    if (frequency_excel == "Yes" and risk_tolerance == "Outside" and 
+        specialised_skill_excel == "High" and similarity_with_current_scopes == "Yes" and 
+        risks == "No" and duration == "Short" and skill_capacity == "No"):
+        return "New Outsource"
+        
+    if (frequency_excel == "Yes" and risk_tolerance == "Outside" and 
+        specialised_skill_excel == "High" and similarity_with_current_scopes == "Yes" and 
+        risks == "No" and duration == "Long" and (strategic_fit == "No" or affordability == "No") and 
+        skill_capacity == "No"):
+        return "New Outsource"
+        
+    if (frequency_excel == "Yes" and risk_tolerance == "Outside" and 
+        specialised_skill_excel == "High" and similarity_with_current_scopes == "Yes" and 
+        risks == "Yes" and (strategic_fit == "No" or affordability == "No") and 
+        skill_capacity == "No"):
+        return "New Outsource"
+        
+    # Final fallback - prefer Current Outsource if we reach here and have skill capacity
     if skill_capacity == "Yes":
         return "Current Outsource"
     else:
-        return "New Outsource"
+        # Complete Edge Cases - Additional New Outsource cases from Excel formula
+        if legal_requirement == "Yes" and specialised_skill_excel == "Low" and skill_capacity == "No":
+            return "New Outsource"
+        if legal_requirement == "Yes" and specialised_skill_excel == "High" and similarity_with_current_scopes == "No" and skill_capacity == "No":
+            return "New Outsource"
+        if business_case == "Yes" and core == "Yes" and specialised_skill_excel == "Low" and skill_capacity == "No":
+            return "New Outsource"
+        if business_case == "Yes" and core == "Yes" and specialised_skill_excel == "High" and similarity_with_current_scopes == "No" and skill_capacity == "No":
+            return "New Outsource"
+        
+        return "Current Outsource"
