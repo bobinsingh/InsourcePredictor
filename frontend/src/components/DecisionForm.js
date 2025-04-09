@@ -1,10 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Tooltip from './Tooltip';
 
-const DecisionForm = ({ activities, onAddActivity, onRemoveActivity, onInputChange, onSubmit }) => {
-  const [currentActivityIndex, setCurrentActivityIndex] = useState(0);
+const DecisionForm = ({ 
+  activities, 
+  onAddActivity, 
+  onRemoveActivity, 
+  onInputChange, 
+  onSubmit, 
+  updatingActivityId,
+  currentActivityIndex: externalCurrentActivityIndex,
+  setCurrentActivityIndex: externalSetCurrentActivityIndex
+}) => {
+  const [currentActivityIndex, setCurrentActivityIndex] = useState(externalCurrentActivityIndex || 0);
   const [selectedField, setSelectedField] = useState(null);
   const [currentStep, setCurrentStep] = useState(1);
+  const [initialActivityStates, setInitialActivityStates] = useState({});
   
   // Group fields into pages (6 per page)
   const fieldPages = [
@@ -60,6 +70,70 @@ const DecisionForm = ({ activities, onAddActivity, onRemoveActivity, onInputChan
     duration: ['Long', 'Short'],
     affordability: ['Yes', 'No'],
     strategic_fit: ['Yes', 'No', '']
+  };
+  
+  // Sync with external state when necessary
+  useEffect(() => {
+    if (externalCurrentActivityIndex !== undefined && externalCurrentActivityIndex !== currentActivityIndex) {
+      setCurrentActivityIndex(externalCurrentActivityIndex);
+    }
+  }, [externalCurrentActivityIndex]);
+  
+  // Update external index when local index changes
+  useEffect(() => {
+    if (externalSetCurrentActivityIndex && currentActivityIndex !== externalCurrentActivityIndex) {
+      externalSetCurrentActivityIndex(currentActivityIndex);
+    }
+  }, [currentActivityIndex, externalSetCurrentActivityIndex, externalCurrentActivityIndex]);
+  
+  // Save form state to localStorage whenever activities change
+  useEffect(() => {
+    // Only save if we have activities to save
+    if (activities && activities.length > 0) {
+      localStorage.setItem('egcaFormActivities', JSON.stringify(activities));
+      localStorage.setItem('egcaFormCurrentActivity', currentActivityIndex.toString());
+      localStorage.setItem('egcaFormCurrentStep', currentStep.toString());
+    }
+  }, [activities, currentActivityIndex, currentStep]);
+  
+  // Store initial activity states when component is mounted or updatingActivityId changes
+  useEffect(() => {
+    // If we're updating an activity, store the initial states
+    if (updatingActivityId && activities && activities.length > 0) {
+      // Deep clone the activities to store their initial state
+      const activityStates = {};
+      activities.forEach(activity => {
+        activityStates[activity.id] = JSON.stringify(activity);
+      });
+      setInitialActivityStates(activityStates);
+      
+      // Only set the current activity index to the updating activity if we haven't
+      // explicitly navigated away from it (only do this once when updatingActivityId is first set)
+      if (!initialActivityStates[updatingActivityId]) {
+        const updatingIndex = activities.findIndex(activity => activity.id === updatingActivityId);
+        if (updatingIndex >= 0) {
+          setCurrentActivityIndex(updatingIndex);
+        }
+      }
+    }
+  }, [updatingActivityId, activities]);
+  
+  // Check if the current activity has been modified (for update button logic)
+  const isActivityModified = (activity) => {
+    if (!updatingActivityId || !initialActivityStates[activity.id]) {
+      return false;
+    }
+    
+    const initialState = JSON.parse(initialActivityStates[activity.id]);
+    
+    // Compare relevant fields
+    const fieldsToCheck = [
+      'business_case', 'core', 'legal_requirement', 'risks', 'risk_tolerance',
+      'frequency', 'specialised_skill', 'similarity_with_current_scopes',
+      'skill_capacity', 'duration', 'affordability', 'strategic_fit'
+    ];
+    
+    return fieldsToCheck.some(field => activity[field] !== initialState[field]);
   };
   
   const handleSkipToActivity = (index) => {
@@ -155,6 +229,12 @@ const DecisionForm = ({ activities, onAddActivity, onRemoveActivity, onInputChan
         )}
       </div>
       
+      {updatingActivityId === currentActivity.id && (
+        <div className="updating-notification info">
+          <p>You are updating this activity. Make your changes and click Update to see the revised results.</p>
+        </div>
+      )}
+      
       <div className="form-content-container">
         <div className="questions-panel">
           {currentFields.map((field) => (
@@ -236,7 +316,9 @@ const DecisionForm = ({ activities, onAddActivity, onRemoveActivity, onInputChan
               className="nav-button submit"
               onClick={handleFormSubmit}
             >
-              Submit <span className="button-icon">&#x2714;</span>
+              {updatingActivityId === currentActivity.id && isActivityModified(currentActivity) 
+                ? 'Update' 
+                : 'Submit'} <span className="button-icon">&#x2714;</span>
             </button>
           ) : (
             <button 

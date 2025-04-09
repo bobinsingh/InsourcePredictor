@@ -37,6 +37,16 @@ body {
   --insource-border: #10b981;
   --analysis-color: #f3f4f6;
   --analysis-border: #9ca3af;
+  
+  /* New notification colors */
+  --info-color: #dbeafe;
+  --info-border: #3b82f6;
+  --success-color: #d1fae5;
+  --success-border: #10b981;
+  --warning-color: #fef3c7;
+  --warning-border: #f59e0b;
+  --error-color: #fee2e2;
+  --error-border: #ef4444;
 }
 
 html, body {
@@ -99,6 +109,105 @@ html, body {
   background-color: white;
   box-shadow: var(--shadow-sm);
   border-radius: var(--border-radius);
+  position: relative;
+}
+
+/* Notification */
+.notification {
+  position: relative;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  border-radius: var(--border-radius);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  0% {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.notification.info {
+  background-color: var(--info-color);
+  border-left: 3px solid var(--info-border);
+}
+
+.notification.success {
+  background-color: var(--success-color);
+  border-left: 3px solid var(--success-border);
+}
+
+.notification.warning {
+  background-color: var(--warning-color);
+  border-left: 3px solid var(--warning-border);
+}
+
+.notification.error {
+  background-color: var(--error-color);
+  border-left: 3px solid var(--error-border);
+}
+
+.notification-message {
+  flex: 1;
+  font-size: 0.9rem;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0 4px;
+  margin-left: 8px;
+  color: var(--text-color);
+}
+
+/* Updating Notification */
+.updating-notification {
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  border-radius: var(--border-radius);
+  font-size: 0.9rem;
+}
+
+.updating-notification.info {
+  background-color: var(--info-color);
+  border-left: 3px solid var(--info-border);
+}
+
+/* View Results Button */
+.form-container {
+  position: relative;
+}
+
+.button-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.action-button.view-results {
+  background-color: var(--dark-gray);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+
+.action-button.view-results:hover {
+  background-color: #4b5563;
 }
 
 /* Decision Form */
