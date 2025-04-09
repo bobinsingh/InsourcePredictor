@@ -7,39 +7,41 @@ const DecisionForm = ({ activities, onAddActivity, onRemoveActivity, onInputChan
   const [currentActivityIndex, setCurrentActivityIndex] = useState(0);
   
   const formSteps = [
-    { fields: ['activity_name', 'activity_type'], title: 'Activity Details' },
+    { fields: ['activity_name', 'activity_type', 'business_case'], title: 'Activity Details' },
     { fields: ['core', 'legal_requirement', 'risks'], title: 'Core Requirements' },
     { fields: ['risk_tolerance', 'frequency', 'specialised_skill'], title: 'Risk & Skills' },
-    { fields: ['similarity_with_scopes', 'skill_capacity', 'duration'], title: 'Capacity & Duration' },
+    { fields: ['similarity_with_current_scopes', 'skill_capacity', 'duration'], title: 'Capacity & Duration' },
     { fields: ['affordability', 'strategic_fit'], title: 'Business Alignment' },
   ];
   
   const fieldLabels = {
     activity_name: 'Activity Name',
     activity_type: 'Activity Type',
-    core: 'Is this a Core Activity?',
-    legal_requirement: 'Is this a Legal Requirement?',
-    risks: 'Are there Significant Risks?',
-    risk_tolerance: 'Risk Tolerance',
+    business_case: 'Business case',
+    core: 'Core ',
+    legal_requirement: 'Legal requirement',
+    risks: 'Risks',
+    risk_tolerance: 'Risk tolerance ',
     frequency: 'Frequency',
-    specialised_skill: 'Specialized Skills Required',
-    similarity_with_scopes: 'Similarity with Current Scopes',
-    skill_capacity: 'Existing Skill Capacity',
-    duration: 'Duration',
-    affordability: 'Affordability',
-    strategic_fit: 'Strategic Fit'
+    specialised_skill: 'Specialised Skill',
+    similarity_with_current_scopes: 'Similarity with current scopes',
+    skill_capacity: 'Skill capacity',
+    duration: 'Duration ',
+    affordability: 'Affordability & Transferable Skill',
+    strategic_fit: 'Strategic fit and Business case'
   };
   
   const fieldTooltips = {
     activity_name: 'Enter a descriptive name for this activity or service',
     activity_type: 'Specify the type or category of this activity',
+    business_case: 'Does this activity have a business case?',
     core: 'Core activities are essential to your organization\'s primary mission and competitive advantage',
     legal_requirement: 'Activities required by law, regulation, or contract that cannot be eliminated',
     risks: 'Consider reputational, operational, financial, or compliance risks associated with this activity',
-    risk_tolerance: 'Your organization\'s willingness to accept the identified risks',
-    frequency: 'How often the activity is performed (Inside = within your organization, Outside = external to your operations)',
-    specialised_skill: 'Whether the activity requires specialized expertise or capabilities that are difficult to develop internally',
-    similarity_with_scopes: 'How similar this activity is to your organization\'s existing operations and capabilities',
+    risk_tolerance: 'Inside or outside your organization\'s risk tolerance boundaries',
+    frequency: 'How often the activity is performed (High/Low)',
+    specialised_skill: 'Whether the activity requires specialized expertise or capabilities',
+    similarity_with_current_scopes: 'How similar this activity is to your organization\'s existing operations and capabilities',
     skill_capacity: 'Whether your organization already has the necessary skills and resources to perform this activity',
     duration: 'The expected timeframe for this activity (Short = temporary or project-based, Long = ongoing or permanent)',
     affordability: 'Whether your organization can afford to develop or maintain this capability internally',
@@ -47,17 +49,18 @@ const DecisionForm = ({ activities, onAddActivity, onRemoveActivity, onInputChan
   };
   
   const options = {
+    business_case: ['Yes', 'No'],
     core: ['Yes', 'No'],
     legal_requirement: ['Yes', 'No', ''],
     risks: ['Yes', 'No', ''],
-    risk_tolerance: ['Yes', 'No', ''],
-    frequency: ['Inside', 'Outside'],
-    specialised_skill: ['Yes', 'No', 'High', 'Low'],
-    similarity_with_scopes: ['Yes', 'No'],
+    risk_tolerance: ['Outside', 'Inside', ''],
+    frequency: ['High', 'Low'],
+    specialised_skill: ['Yes', 'No'],
+    similarity_with_current_scopes: ['Yes', 'No'],
     skill_capacity: ['Yes', 'No'],
-    duration: ['Short', 'Long'],
+    duration: ['Long', 'Short'],
     affordability: ['Yes', 'No'],
-    strategic_fit: ['Yes', 'No']
+    strategic_fit: ['Yes', 'No', '']
   };
   
   const handleNext = () => {

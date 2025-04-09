@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from pydantic import BaseModel
 import io
 from fastapi.responses import StreamingResponse
@@ -12,17 +12,18 @@ from logic.decision_rules import determine_outcome
 router = APIRouter()
 
 class DecisionInput(BaseModel):
+    business_case: str
     core: str
-    legal_requirement: str = ""
-    risks: str = ""
-    risk_tolerance: str = ""
+    legal_requirement: Optional[str] = ""
+    risks: Optional[str] = ""
+    risk_tolerance: Optional[str] = ""
     frequency: str
     specialised_skill: str
-    similarity_with_scopes: str
+    similarity_with_current_scopes: str
     skill_capacity: str
     duration: str
     affordability: str
-    strategic_fit: str
+    strategic_fit: Optional[str] = ""
     activity_name: str = "Unnamed Activity"
     activity_type: str = ""
 
@@ -32,13 +33,14 @@ class DecisionRequest(BaseModel):
 class DecisionOutput(BaseModel):
     activity_name: str
     activity_type: str
+    business_case: str
     core: str
     legal_requirement: str
     risks: str
     risk_tolerance: str
     frequency: str
     specialised_skill: str
-    similarity_with_scopes: str
+    similarity_with_current_scopes: str
     skill_capacity: str
     duration: str
     affordability: str
@@ -66,13 +68,14 @@ async def determine_outcomes(request: DecisionRequest):
         output = DecisionOutput(
             activity_name=input_dict.get("activity_name", ""),
             activity_type=input_dict.get("activity_type", ""),
+            business_case=input_dict.get("business_case", ""),
             core=input_dict.get("core", ""),
             legal_requirement=input_dict.get("legal_requirement", ""),
             risks=input_dict.get("risks", ""),
             risk_tolerance=input_dict.get("risk_tolerance", ""),
             frequency=input_dict.get("frequency", ""),
             specialised_skill=input_dict.get("specialised_skill", ""),
-            similarity_with_scopes=input_dict.get("similarity_with_scopes", ""),
+            similarity_with_current_scopes=input_dict.get("similarity_with_current_scopes", ""),
             skill_capacity=input_dict.get("skill_capacity", ""),
             duration=input_dict.get("duration", ""),
             affordability=input_dict.get("affordability", ""),
@@ -108,26 +111,27 @@ async def export_to_excel(request: DecisionRequest):
     # Define column headers with friendly names
     headers_dict = {
         "activity_name": "Activity Name", 
-        "activity_type": "Activity Type", 
-        "core": "Core Activity", 
-        "legal_requirement": "Legal Requirement", 
-        "risks": "Significant Risks", 
-        "risk_tolerance": "Risk Tolerance", 
+        "activity_type": "Activity Type",
+        "business_case": "Business case",
+        "core": "Core ", 
+        "legal_requirement": "Legal requirement", 
+        "risks": "Risks", 
+        "risk_tolerance": "Risk tolerance ", 
         "frequency": "Frequency", 
-        "specialised_skill": "Specialized Skills Required", 
-        "similarity_with_scopes": "Similarity with Current Scopes", 
-        "skill_capacity": "Existing Skill Capacity", 
-        "duration": "Duration", 
-        "affordability": "Affordability", 
-        "strategic_fit": "Strategic Fit", 
+        "specialised_skill": "Specialised Skill", 
+        "similarity_with_current_scopes": "Similarity with current scopes", 
+        "skill_capacity": "Skill capacity", 
+        "duration": "Duration ", 
+        "affordability": "Affordability & Transferable Skill", 
+        "strategic_fit": "Strategic fit and Business case", 
         "outcome": "Outcome"
     }
     
     # Define column order
     headers = [
-        "activity_name", "activity_type", "core", "legal_requirement", 
+        "activity_name", "activity_type", "business_case", "core", "legal_requirement", 
         "risks", "risk_tolerance", "frequency", "specialised_skill", 
-        "similarity_with_scopes", "skill_capacity", "duration", 
+        "similarity_with_current_scopes", "skill_capacity", "duration", 
         "affordability", "strategic_fit", "outcome"
     ]
     
@@ -156,6 +160,8 @@ async def export_to_excel(request: DecisionRequest):
                     cell.fill = PatternFill(start_color="FFFFCC", end_color="FFFFCC", fill_type="solid")
                 elif result[header] == "Insource or create in-house capacity":
                     cell.fill = PatternFill(start_color="CCFFCC", end_color="CCFFCC", fill_type="solid")
+                elif result[header] == "Requires Further Analysis":
+                    cell.fill = PatternFill(start_color="E6E6E6", end_color="E6E6E6", fill_type="solid")
     
     # Auto-adjust column width
     for col in ws.columns:
@@ -173,17 +179,18 @@ async def export_to_excel(request: DecisionRequest):
     
     # Add field descriptions
     field_descriptions = {
-        "Core Activity": "Core activities are essential to your organization's primary mission and competitive advantage",
-        "Legal Requirement": "Activities required by law, regulation, or contract that cannot be eliminated",
-        "Significant Risks": "Consider reputational, operational, financial, or compliance risks associated with this activity",
-        "Risk Tolerance": "Your organization's willingness to accept the identified risks",
-        "Frequency": "How often the activity is performed (Inside = within your organization, Outside = external to your operations)",
-        "Specialized Skills Required": "Whether the activity requires specialized expertise or capabilities that are difficult to develop internally",
-        "Similarity with Current Scopes": "How similar this activity is to your organization's existing operations and capabilities",
-        "Existing Skill Capacity": "Whether your organization already has the necessary skills and resources to perform this activity",
-        "Duration": "The expected timeframe for this activity (Short = temporary or project-based, Long = ongoing or permanent)",
-        "Affordability": "Whether your organization can afford to develop or maintain this capability internally",
-        "Strategic Fit": "How well this activity aligns with your organization's long-term strategic objectives",
+        "Business case": "Does this activity have a business case?",
+        "Core ": "Core activities are essential to your organization's primary mission and competitive advantage",
+        "Legal requirement": "Activities required by law, regulation, or contract that cannot be eliminated",
+        "Risks": "Consider reputational, operational, financial, or compliance risks associated with this activity",
+        "Risk tolerance ": "Inside or outside your organization's risk tolerance boundaries",
+        "Frequency": "How often the activity is performed (High/Low)",
+        "Specialised Skill": "Whether the activity requires specialized expertise or capabilities",
+        "Similarity with current scopes": "How similar this activity is to your organization's existing operations and capabilities",
+        "Skill capacity": "Whether your organization already has the necessary skills and resources to perform this activity",
+        "Duration ": "The expected timeframe for this activity (Short = temporary or project-based, Long = ongoing or permanent)",
+        "Affordability & Transferable Skill": "Whether your organization can afford to develop or maintain this capability internally",
+        "Strategic fit and Business case": "How well this activity aligns with your organization's long-term strategic objectives",
         "Outcome": "The recommended sourcing strategy based on all factors"
     }
     

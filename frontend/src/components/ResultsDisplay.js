@@ -16,17 +16,18 @@ const ResultsDisplay = ({ results, onBackToForm, onExportExcel }) => {
   const columns = [
     { name: 'Activity Name', selector: row => row.activity_name, sortable: true },
     { name: 'Activity Type', selector: row => row.activity_type, sortable: true },
+    { name: 'Business case', selector: row => row.business_case, sortable: true },
     { name: 'Core', selector: row => row.core, sortable: true },
-    { name: 'Legal Requirement', selector: row => row.legal_requirement, sortable: true },
+    { name: 'Legal requirement', selector: row => row.legal_requirement, sortable: true },
     { name: 'Risks', selector: row => row.risks, sortable: true },
-    { name: 'Risk Tolerance', selector: row => row.risk_tolerance, sortable: true },
+    { name: 'Risk tolerance', selector: row => row.risk_tolerance, sortable: true },
     { name: 'Frequency', selector: row => row.frequency, sortable: true },
-    { name: 'Specialized Skill', selector: row => row.specialised_skill, sortable: true },
-    { name: 'Similarity with Scopes', selector: row => row.similarity_with_scopes, sortable: true },
-    { name: 'Skill Capacity', selector: row => row.skill_capacity, sortable: true },
+    { name: 'Specialised Skill', selector: row => row.specialised_skill, sortable: true },
+    { name: 'Similarity with current scopes', selector: row => row.similarity_with_current_scopes, sortable: true },
+    { name: 'Skill capacity', selector: row => row.skill_capacity, sortable: true },
     { name: 'Duration', selector: row => row.duration, sortable: true },
-    { name: 'Affordability', selector: row => row.affordability, sortable: true },
-    { name: 'Strategic Fit', selector: row => row.strategic_fit, sortable: true },
+    { name: 'Affordability & Transferable Skill', selector: row => row.affordability, sortable: true },
+    { name: 'Strategic fit and Business case', selector: row => row.strategic_fit, sortable: true },
     { name: 'Outcome', selector: row => row.outcome, sortable: true }
   ];
 
@@ -47,6 +48,8 @@ const ResultsDisplay = ({ results, onBackToForm, onExportExcel }) => {
         return 'Find a new outsourcing partner for this activity';
       case 'Insource or create in-house capacity':
         return 'Bring this activity in-house or develop internal capacity';
+      case 'Requires Further Analysis':
+        return 'Additional information or analysis is needed to make a decision';
       default:
         return 'Further analysis required';
     }

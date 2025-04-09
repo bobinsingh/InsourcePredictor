@@ -11,13 +11,14 @@ function App() {
     id: 1,
     activity_name: '',
     activity_type: '',
+    business_case: '',
     core: '',
     legal_requirement: '',
     risks: '',
     risk_tolerance: '',
     frequency: '',
     specialised_skill: '',
-    similarity_with_scopes: '',
+    similarity_with_current_scopes: '',
     skill_capacity: '',
     duration: '',
     affordability: '',
@@ -33,13 +34,14 @@ function App() {
       id: newId,
       activity_name: '',
       activity_type: '',
+      business_case: '',
       core: '',
       legal_requirement: '',
       risks: '',
       risk_tolerance: '',
       frequency: '',
       specialised_skill: '',
-      similarity_with_scopes: '',
+      similarity_with_current_scopes: '',
       skill_capacity: '',
       duration: '',
       affordability: '',
@@ -63,14 +65,14 @@ function App() {
     try {
       // Validate all required fields are filled
       const missingFields = activities.some(activity => 
+        !activity.business_case ||
         !activity.core || 
         !activity.frequency || 
         !activity.specialised_skill || 
-        !activity.similarity_with_scopes || 
+        !activity.similarity_with_current_scopes || 
         !activity.skill_capacity || 
         !activity.duration || 
-        !activity.affordability || 
-        !activity.strategic_fit
+        !activity.affordability
       );
       
       if (missingFields) {
@@ -82,17 +84,18 @@ function App() {
         inputs: activities.map(activity => ({
           activity_name: activity.activity_name || 'Unnamed Activity',
           activity_type: activity.activity_type || '',
+          business_case: activity.business_case,
           core: activity.core,
           legal_requirement: activity.legal_requirement || '',
           risks: activity.risks || '',
           risk_tolerance: activity.risk_tolerance || '',
           frequency: activity.frequency,
           specialised_skill: activity.specialised_skill,
-          similarity_with_scopes: activity.similarity_with_scopes,
+          similarity_with_current_scopes: activity.similarity_with_current_scopes,
           skill_capacity: activity.skill_capacity,
           duration: activity.duration,
           affordability: activity.affordability,
-          strategic_fit: activity.strategic_fit
+          strategic_fit: activity.strategic_fit || ''
         }))
       };
       
@@ -115,17 +118,18 @@ function App() {
         inputs: activities.map(activity => ({
           activity_name: activity.activity_name || 'Unnamed Activity',
           activity_type: activity.activity_type || '',
+          business_case: activity.business_case,
           core: activity.core,
           legal_requirement: activity.legal_requirement || '',
           risks: activity.risks || '',
           risk_tolerance: activity.risk_tolerance || '',
           frequency: activity.frequency,
           specialised_skill: activity.specialised_skill,
-          similarity_with_scopes: activity.similarity_with_scopes,
+          similarity_with_current_scopes: activity.similarity_with_current_scopes,
           skill_capacity: activity.skill_capacity,
           duration: activity.duration,
           affordability: activity.affordability,
-          strategic_fit: activity.strategic_fit
+          strategic_fit: activity.strategic_fit || ''
         }))
       };
       
