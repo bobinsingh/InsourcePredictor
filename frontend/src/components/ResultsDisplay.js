@@ -1,16 +1,22 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import DataTable from './DataTable';
 
-const ResultsDisplay = ({ results, onBackToForm, onExportExcel }) => {
+const ResultsDisplay = ({ results, onBackToForm, onExportExcel, onUpdateOutcomes }) => {
+  const fileInputRef = useRef(null);
+  
   // Group results by outcome
-  const resultsByOutcome = results.reduce((acc, result) => {
-    const outcome = result.outcome;
-    if (!acc[outcome]) {
-      acc[outcome] = [];
-    }
-    acc[outcome].push(result);
-    return acc;
-  }, {});
+  const groupResultsByOutcome = (resultsData) => {
+    if (!Array.isArray(resultsData)) return {};
+    
+    return resultsData.reduce((acc, result) => {
+      const outcome = result.outcome;
+      if (!acc[outcome]) {
+        acc[outcome] = [];
+      }
+      acc[outcome].push(result);
+      return acc;
+    }, {});
+  };
   
   // Create columns for the data table
   const columns = [
@@ -33,6 +39,7 @@ const ResultsDisplay = ({ results, onBackToForm, onExportExcel }) => {
 
   // Helper function to get the CSS class for each outcome type
   const getOutcomeClass = (outcome) => {
+    if (!outcome) return '';
     const normalized = outcome.toLowerCase().replace(/\s+/g, '-');
     return normalized;
   };
@@ -55,9 +62,25 @@ const ResultsDisplay = ({ results, onBackToForm, onExportExcel }) => {
     }
   };
   
+  const handleFileUpload = (event) => {
+    if (event.target.files && event.target.files[0]) {
+      onExportExcel(event.target.files[0]);
+    }
+  };
+  
+  const handleUpdateExistingFile = () => {
+    fileInputRef.current.click();
+  };
+  
+  // Ensure results is an array, even if empty
+  const safeResults = Array.isArray(results) ? results : [];
+  const resultsByOutcome = groupResultsByOutcome(safeResults);
+  
   return (
     <div className="results-display">
-      <h2>Decision Results</h2>
+      <div className="results-header">
+        <h2>Decision Results</h2>
+      </div>
       
       <div className="results-summary">
         {Object.entries(resultsByOutcome).map(([outcome, items]) => (
@@ -78,26 +101,55 @@ const ResultsDisplay = ({ results, onBackToForm, onExportExcel }) => {
         <h3>Detailed Results</h3>
         <DataTable 
           columns={columns}
-          data={results}
+          data={safeResults}
         />
       </div>
       
       <div className="results-actions">
-        <button 
-          type="button" 
-          className="action-button back"
-          onClick={onBackToForm}
-        >
-          Back to Form
-        </button>
+        <div className="action-group-left">
+          <button 
+            type="button" 
+            className="action-button back"
+            onClick={onBackToForm}
+          >
+            Back to Form
+          </button>
+          
+          <button 
+            type="button" 
+            className="action-button update"
+            onClick={onUpdateOutcomes}
+          >
+            Update Outcomes
+          </button>
+        </div>
         
-        <button 
-          type="button" 
-          className="action-button export"
-          onClick={onExportExcel}
-        >
-          Export to Excel
-        </button>
+        <div className="action-group-right">
+          <button 
+            type="button" 
+            className="action-button export"
+            onClick={() => onExportExcel()}
+          >
+            Export to Excel
+          </button>
+          
+          <button 
+            type="button" 
+            className="action-button update-excel"
+            onClick={handleUpdateExistingFile}
+          >
+            Update Existing Excel
+          </button>
+          
+          {/* Hidden file input */}
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleFileUpload} 
+            style={{ display: 'none' }} 
+            accept=".xlsx" 
+          />
+        </div>
       </div>
     </div>
   );

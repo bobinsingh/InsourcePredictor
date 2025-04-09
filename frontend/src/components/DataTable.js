@@ -1,70 +1,51 @@
 import React from 'react';
 import DataTable from 'react-data-table-component';
+import './DataTable.css';
 
-const customStyles = {
-  table: {
-    style: {
-      borderRadius: '5px',
-      overflow: 'hidden',
-    },
+// Function to highlight certain outcome rows
+const conditionalRowStyles = [
+  {
+    when: row => row.outcome === 'Eliminate',
+    classNames: ['highlight-eliminate'],
   },
-  headRow: {
-    style: {
-      backgroundColor: '#f8f9fa',
-      borderBottomWidth: '2px',
-    },
+  {
+    when: row => row.outcome === 'Current Outsource',
+    classNames: ['highlight-current-outsource'],
   },
-  headCells: {
-    style: {
-      fontSize: '14px',
-      fontWeight: 'bold',
-      paddingLeft: '16px',
-      paddingRight: '16px',
-    },
+  {
+    when: row => row.outcome === 'New Outsource',
+    classNames: ['highlight-new-outsource'],
   },
-  rows: {
-    style: {
-      fontSize: '14px',
-      minHeight: '48px',
-      '&:not(:last-of-type)': {
-        borderBottomStyle: 'solid',
-        borderBottomWidth: '1px',
-        borderBottomColor: '#e9ecef',
-      },
-    },
-    highlightOnHoverStyle: {
-      backgroundColor: '#f8f9fa',
-      cursor: 'pointer',
-    },
+  {
+    when: row => row.outcome === 'Insource or create in-house capacity',
+    classNames: ['highlight-insource'],
   },
-  cells: {
-    style: {
-      paddingLeft: '16px',
-      paddingRight: '16px',
-    },
+  {
+    when: row => row.outcome === 'Requires Further Analysis',
+    classNames: ['highlight-analysis'],
   },
-  pagination: {
-    style: {
-      borderTopStyle: 'solid',
-      borderTopWidth: '1px',
-      borderTopColor: '#e9ecef',
-    },
-  },
-};
+];
 
 const Table = ({ columns, data }) => {
   return (
-    <DataTable
-      columns={columns}
-      data={data}
-      pagination
-      responsive
-      highlightOnHover
-      customStyles={customStyles}
-      paginationPerPage={10}
-      paginationRowsPerPageOptions={[5, 10, 15, 20]}
-      noDataComponent="No activities found"
-    />
+    <div className="data-table-container">
+      <DataTable
+        columns={columns}
+        data={data}
+        pagination
+        responsive
+        highlightOnHover
+        pointerOnHover
+        conditionalRowStyles={conditionalRowStyles}
+        paginationPerPage={10}
+        paginationRowsPerPageOptions={[5, 10, 15, 20, 25, 30]}
+        noDataComponent="No activities found"
+        className="custom-data-table"
+        striped
+        fixedHeader
+        fixedHeaderScrollHeight="500px"
+      />
+    </div>
   );
 };
 

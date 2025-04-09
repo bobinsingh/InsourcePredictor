@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import FormNavigation from './FormNavigation';
-import Tooltip from './Tooltip';
 
 const DecisionForm = ({ activities, onAddActivity, onRemoveActivity, onInputChange, onSubmit }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [currentActivityIndex, setCurrentActivityIndex] = useState(0);
+  const [selectedField, setSelectedField] = useState(null);
   
   const formSteps = [
     { fields: ['activity_name', 'activity_type', 'business_case'], title: 'Activity Details' },
@@ -66,24 +66,56 @@ const DecisionForm = ({ activities, onAddActivity, onRemoveActivity, onInputChan
   const handleNext = () => {
     if (currentStep < formSteps.length) {
       setCurrentStep(currentStep + 1);
+      setSelectedField(null);
     } else if (currentActivityIndex < activities.length - 1) {
       setCurrentActivityIndex(currentActivityIndex + 1);
       setCurrentStep(1);
+      setSelectedField(null);
     }
   };
   
   const handleBack = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+      setSelectedField(null);
     } else if (currentActivityIndex > 0) {
       setCurrentActivityIndex(currentActivityIndex - 1);
       setCurrentStep(formSteps.length);
+      setSelectedField(null);
     }
   };
   
   const handleSkipToActivity = (index) => {
     setCurrentActivityIndex(index);
     setCurrentStep(1);
+    setSelectedField(null);
+  };
+
+  const handleFormSubmit = () => {
+    // Verify all required fields are filled for the current activity
+    const currentActivity = activities[currentActivityIndex];
+    const currentRequiredFields = formSteps.flatMap(step => 
+      step.fields.filter(field => 
+        field !== 'activity_name' && 
+        field !== 'activity_type' && 
+        field !== 'legal_requirement' && 
+        field !== 'risks' && 
+        field !== 'risk_tolerance' && 
+        field !== 'strategic_fit'
+      )
+    );
+    
+    const missingFields = currentRequiredFields.some(field => !currentActivity[field]);
+    
+    if (missingFields) {
+      alert('Please fill in all required fields before submitting.');
+      return;
+    }
+    
+    // Call the parent onSubmit function
+    if (typeof onSubmit === 'function') {
+      onSubmit();
+    }
   };
   
   // Ensure we have a valid activity
@@ -100,7 +132,7 @@ const DecisionForm = ({ activities, onAddActivity, onRemoveActivity, onInputChan
   const currentFields = formSteps[currentStep - 1].fields;
   
   return (
-    <div className="decision-form">
+    <div className="decision-form-container">
       <div className="form-header">
         <h2>Activity {currentActivityIndex + 1} of {activities.length}: {formSteps[currentStep - 1].title}</h2>
         
@@ -119,51 +151,80 @@ const DecisionForm = ({ activities, onAddActivity, onRemoveActivity, onInputChan
         )}
       </div>
       
-      <div className="form-body">
-        {currentFields.map(field => (
-          <div key={field} className="form-group">
-            <div className="field-header">
-              <label>{fieldLabels[field]}</label>
-              <Tooltip content={fieldTooltips[field]} />
-            </div>
-            
-            {field === 'activity_name' || field === 'activity_type' ? (
-              <input
-                type="text"
-                value={currentActivity[field] || ''}
-                onChange={(e) => onInputChange(currentActivity.id, field, e.target.value)}
-                placeholder={fieldLabels[field]}
-              />
-            ) : (
-              <div className="radio-options">
-                {options[field].map(option => (
-                  <label key={option || 'empty'} className="radio-label">
-                    <input
-                      type="radio"
-                      name={`${currentActivity.id}-${field}`}
-                      checked={currentActivity[field] === option}
-                      onChange={() => onInputChange(currentActivity.id, field, option)}
-                    />
-                    {option || 'Not Applicable'}
-                  </label>
-                ))}
+      <div className="form-content-container">
+        <div className="questions-panel">
+          {currentFields.map((field, index) => (
+            <div 
+              key={field} 
+              className={`form-group ${selectedField === field ? 'selected' : ''}`}
+              onClick={() => setSelectedField(field)}
+            >
+              <div className="field-header">
+                <div className="field-number">{index + 1}</div>
+                <label>{fieldLabels[field]}</label>
               </div>
+              
+              {field === 'activity_name' || field === 'activity_type' ? (
+                <input
+                  type="text"
+                  value={currentActivity[field] || ''}
+                  onChange={(e) => onInputChange(currentActivity.id, field, e.target.value)}
+                  placeholder={fieldLabels[field]}
+                  className="form-input"
+                />
+              ) : (
+                <div className="radio-options">
+                  {options[field].map(option => (
+                    <label key={option || 'empty'} className="radio-label">
+                      <input
+                        type="radio"
+                        name={`${currentActivity.id}-${field}`}
+                        checked={currentActivity[field] === option}
+                        onChange={() => onInputChange(currentActivity.id, field, option)}
+                      />
+                      {option || 'Not Applicable'}
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        
+        <div className="description-panel">
+          <div className="description-header">
+            <h3>Field Description</h3>
+          </div>
+          <div className="description-content">
+            {selectedField ? (
+              <>
+                <h4>{fieldLabels[selectedField]}</h4>
+                <p>{fieldTooltips[selectedField]}</p>
+              </>
+            ) : (
+              <>
+                <h4>{fieldLabels[currentFields[0]]}</h4>
+                <p>{fieldTooltips[currentFields[0]]}</p>
+                <div className="description-hint">
+                  <p>Click on any question to view its description here.</p>
+                </div>
+              </>
             )}
           </div>
-        ))}
+        </div>
       </div>
       
       <FormNavigation 
-        currentStep={currentStep}
-        totalSteps={formSteps.length}
-        onNext={handleNext}
-        onBack={handleBack}
-        isLastActivity={currentActivityIndex === activities.length - 1}
-        onAddActivity={onAddActivity}
-        onRemoveActivity={() => onRemoveActivity(currentActivity.id)}
-        canRemove={activities.length > 1}
-        onSubmit={onSubmit}
-      />
+      currentStep={currentStep}
+      totalSteps={formSteps.length}
+      onNext={handleNext}
+      onBack={handleBack}
+      isLastActivity={currentActivityIndex === activities.length - 1}
+      onAddActivity={onAddActivity}
+      onRemoveActivity={() => onRemoveActivity(currentActivity.id)}
+      canRemove={activities.length > 1}
+      onSubmit={handleFormSubmit}
+    />
     </div>
   );
 };

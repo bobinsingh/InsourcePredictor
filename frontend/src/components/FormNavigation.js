@@ -13,6 +13,17 @@ const FormNavigation = ({
 }) => {
   const isLastStep = currentStep === totalSteps;
   
+  // Safe function call with debugging
+  const handleSubmitClick = () => {
+    console.log("Submit button clicked");
+    if (typeof onSubmit === 'function') {
+      console.log("Calling onSubmit function");
+      onSubmit();
+    } else {
+      console.error("onSubmit is not a function");
+    }
+  };
+  
   return (
     <div className="form-navigation">
       <div className="nav-buttons">
@@ -22,16 +33,16 @@ const FormNavigation = ({
           onClick={onBack}
           disabled={currentStep === 1 && !isLastActivity}
         >
-          Back
+          <span className="button-icon">&#x2190;</span> Back
         </button>
         
         {isLastStep && isLastActivity ? (
           <button 
             type="button" 
             className="nav-button submit"
-            onClick={onSubmit}
+            onClick={handleSubmitClick}
           >
-            Submit
+            Submit <span className="button-icon">&#x2714;</span>
           </button>
         ) : (
           <button 
@@ -39,7 +50,7 @@ const FormNavigation = ({
             className="nav-button next"
             onClick={onNext}
           >
-            Next
+            Next <span className="button-icon">&#x2192;</span>
           </button>
         )}
       </div>
@@ -50,7 +61,7 @@ const FormNavigation = ({
           className="activity-button add"
           onClick={onAddActivity}
         >
-          Add Activity
+          <span className="button-icon">&#x2b;</span> Add Activity
         </button>
         
         {canRemove && (
@@ -59,7 +70,7 @@ const FormNavigation = ({
             className="activity-button remove"
             onClick={onRemoveActivity}
           >
-            Remove This Activity
+            <span className="button-icon">&#x2212;</span> Remove Activity
           </button>
         )}
       </div>

@@ -1,0 +1,152 @@
+/* DataTable Styles */
+.data-table-container {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  }
+  
+  .custom-data-table {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  /* Header styles */
+  .custom-data-table .rdt_TableHead {
+    background-color: var(--light-gray);
+    border-bottom: 2px solid var(--mid-gray);
+  }
+  
+  .custom-data-table .rdt_TableHeadRow {
+    font-weight: bold;
+    color: var(--text-color);
+    font-size: 0.9rem;
+    min-height: 56px;
+  }
+  
+  .custom-data-table .rdt_TableCol {
+    padding: 16px;
+  }
+  
+  .custom-data-table .rdt_TableCol_Sortable {
+    cursor: pointer;
+  }
+  
+  .custom-data-table .rdt_TableCol_Sortable:hover {
+    background-color: var(--mid-gray);
+  }
+  
+  /* Row styles */
+  .custom-data-table .rdt_TableRow {
+    min-height: 48px;
+    border-bottom: 1px solid var(--light-gray);
+    transition: background-color 0.2s;
+  }
+  
+  .custom-data-table .rdt_TableRow:last-child {
+    border-bottom: none;
+  }
+  
+  .custom-data-table .rdt_TableCell {
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    color: var(--text-color);
+  }
+  
+  /* Striped rows */
+  .custom-data-table .rdt_TableRow:nth-child(odd) {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+  
+  /* Hover effect */
+  .custom-data-table .rdt_TableRow:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+  
+  /* Pagination styles */
+  .custom-data-table .rdt_Pagination {
+    color: var(--text-light);
+    font-size: 0.85rem;
+    min-height: 56px;
+    border-top: 1px solid var(--light-gray);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 16px;
+  }
+  
+  .custom-data-table .rdt_Pagination button {
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    padding: 8px;
+    margin: 0 4px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+  }
+  
+  .custom-data-table .rdt_Pagination button:hover:not(:disabled) {
+    background-color: var(--light-gray);
+  }
+  
+  .custom-data-table .rdt_Pagination button:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+  
+  .custom-data-table .rdt_Pagination select {
+    border: 1px solid var(--mid-gray);
+    border-radius: 4px;
+    padding: 4px 8px;
+    background-color: white;
+    cursor: pointer;
+  }
+  
+  /* Outcome highlights */
+  .highlight-eliminate {
+    background-color: var(--eliminate-color) !important;
+    border-left: 3px solid var(--eliminate-border);
+  }
+  
+  .highlight-current-outsource {
+    background-color: var(--current-outsource-color) !important;
+    border-left: 3px solid var(--current-outsource-border);
+  }
+  
+  .highlight-new-outsource {
+    background-color: var(--new-outsource-color) !important;
+    border-left: 3px solid var(--new-outsource-border);
+  }
+  
+  .highlight-insource {
+    background-color: var(--insource-color) !important;
+    border-left: 3px solid var(--insource-border);
+  }
+  
+  .highlight-analysis {
+    background-color: var(--analysis-color) !important;
+    border-left: 3px solid var(--analysis-border);
+  }
+  
+  /* No data component */
+  .custom-data-table .rdt_NoData {
+    padding: 24px;
+    text-align: center;
+    color: var(--text-light);
+    font-size: 1rem;
+  }
+  
+  /* Responsive styles */
+  @media (max-width: 768px) {
+    .custom-data-table .rdt_TableCell,
+    .custom-data-table .rdt_TableCol {
+      padding: 10px 12px;
+      font-size: 0.85rem;
+    }
+    
+    .custom-data-table .rdt_Pagination {
+      font-size: 0.75rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 10px;
+    }
+  }
