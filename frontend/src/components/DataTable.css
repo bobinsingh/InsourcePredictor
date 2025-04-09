@@ -3,7 +3,7 @@
   width: 100%;
   overflow-x: auto;
   border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .custom-data-table {
@@ -13,13 +13,13 @@
 
 /* Header styles */
 .custom-data-table .rdt_TableHead {
-  background-color: var(--light-gray);
-  border-bottom: 2px solid var(--mid-gray);
+  background-color: #f3f4f6;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .custom-data-table .rdt_TableHeadRow {
   font-weight: bold;
-  color: var(--text-color);
+  color: #374151;
   font-size: 0.85rem;
   min-height: 48px;
 }
@@ -33,13 +33,13 @@
 }
 
 .custom-data-table .rdt_TableCol_Sortable:hover {
-  background-color: var(--mid-gray);
+  background-color: #e5e7eb;
 }
 
 /* Row styles */
 .custom-data-table .rdt_TableRow {
   min-height: 40px;
-  border-bottom: 1px solid var(--light-gray);
+  border-bottom: 1px solid #f3f4f6;
   transition: background-color 0.2s;
 }
 
@@ -50,7 +50,7 @@
 .custom-data-table .rdt_TableCell {
   padding: 8px 12px;
   font-size: 0.85rem;
-  color: var(--text-color);
+  color: #374151;
 }
 
 /* Striped rows */
@@ -65,10 +65,10 @@
 
 /* Pagination styles */
 .custom-data-table .rdt_Pagination {
-  color: var(--text-light);
+  color: #6b7280;
   font-size: 0.8rem;
   min-height: 48px;
-  border-top: 1px solid var(--light-gray);
+  border-top: 1px solid #f3f4f6;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -86,7 +86,7 @@
 }
 
 .custom-data-table .rdt_Pagination button:hover:not(:disabled) {
-  background-color: var(--light-gray);
+  background-color: #f3f4f6;
 }
 
 .custom-data-table .rdt_Pagination button:disabled {
@@ -95,7 +95,7 @@
 }
 
 .custom-data-table .rdt_Pagination select {
-  border: 1px solid var(--mid-gray);
+  border: 1px solid #e5e7eb;
   border-radius: 4px;
   padding: 4px 6px;
   background-color: white;
@@ -103,37 +103,37 @@
   font-size: 0.8rem;
 }
 
-/* Outcome highlights */
+/* Keep outcome highlights */
 .highlight-eliminate {
-  background-color: var(--eliminate-color) !important;
-  border-left: 3px solid var(--eliminate-border);
+  background-color: #fee2e2 !important;
+  border-left: 3px solid #ef4444;
 }
 
 .highlight-current-outsource {
-  background-color: var(--current-outsource-color) !important;
-  border-left: 3px solid var(--current-outsource-border);
+  background-color: #dbeafe !important;
+  border-left: 3px solid #3b82f6;
 }
 
 .highlight-new-outsource {
-  background-color: var(--new-outsource-color) !important;
-  border-left: 3px solid var(--new-outsource-border);
+  background-color: #fef3c7 !important;
+  border-left: 3px solid #f59e0b;
 }
 
 .highlight-insource {
-  background-color: var(--insource-color) !important;
-  border-left: 3px solid var(--insource-border);
+  background-color: #d1fae5 !important;
+  border-left: 3px solid #10b981;
 }
 
 .highlight-analysis {
-  background-color: var(--analysis-color) !important;
-  border-left: 3px solid var(--analysis-border);
+  background-color: #f3f4f6 !important;
+  border-left: 3px solid #9ca3af;
 }
 
 /* No data component */
 .custom-data-table .rdt_NoData {
   padding: 20px;
   text-align: center;
-  color: var(--text-light);
+  color: #6b7280;
   font-size: 0.95rem;
 }
 

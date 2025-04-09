@@ -28,6 +28,7 @@ function App() {
   // Store all results
   const [results, setResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   const handleAddActivity = () => {
     const newId = activities.length > 0 ? Math.max(...activities.map(a => a.id)) + 1 : 1;
@@ -76,7 +77,6 @@ function App() {
   };
   
   const prepareRequestData = () => {
-    console.log("Activities before submission:", activities);
     return {
       inputs: activities.map(activity => ({
         activity_name: activity.activity_name || 'Unnamed Activity',
@@ -107,15 +107,13 @@ function App() {
         return;
       }
       
+      setIsLoading(true);
+      
       // Prepare request data
       const requestData = prepareRequestData();
       
-      console.log("Submitting data:", requestData);
-      
       // Call API
       const response = await axios.post(`${API_BASE_URL}/determine`, requestData);
-      
-      console.log("API response:", response.data);
       
       // Set results and show results page
       setResults(response.data.results);
@@ -123,6 +121,8 @@ function App() {
     } catch (error) {
       console.error('Error submitting data:', error);
       alert('An error occurred while processing your request.');
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -136,6 +136,8 @@ function App() {
         return;
       }
       
+      setIsLoading(true);
+      
       // Prepare request data
       const requestData = prepareRequestData();
       
@@ -148,6 +150,8 @@ function App() {
     } catch (error) {
       console.error('Error updating outcomes:', error);
       alert('An error occurred while updating the outcomes.');
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -157,6 +161,7 @@ function App() {
   
   const handleExportExcel = async () => {
     try {
+      setIsLoading(true);
       const requestData = prepareRequestData();
       
       const response = await axios.post(
@@ -181,6 +186,8 @@ function App() {
     } catch (error) {
       console.error('Error exporting Excel:', error);
       alert('An error occurred while exporting to Excel.');
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -196,6 +203,13 @@ function App() {
       </div>
       
       <main className="app-main">
+        {isLoading && (
+          <div className="loading-overlay">
+            <div className="loading-spinner"></div>
+            <p>Processing...</p>
+          </div>
+        )}
+        
         {!showResults ? (
           <DecisionForm 
             activities={activities}

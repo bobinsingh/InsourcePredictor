@@ -69,24 +69,28 @@ const DecisionForm = ({ activities, onAddActivity, onRemoveActivity, onInputChan
   };
 
   const handleFormSubmit = () => {
-    // Verify all required fields are filled for the current activity
-    const currentActivity = activities[currentActivityIndex];
+    // Verify all required fields are filled for all activities
     const requiredFields = [
       'business_case', 'core', 'frequency', 'specialised_skill',
       'similarity_with_current_scopes', 'skill_capacity', 'duration', 'affordability'
     ];
     
-    const missingFields = requiredFields.some(field => !currentActivity[field]);
+    let missingFields = false;
+    
+    for (const activity of activities) {
+      if (requiredFields.some(field => !activity[field])) {
+        missingFields = true;
+        break;
+      }
+    }
     
     if (missingFields) {
       alert('Please fill in all required fields before submitting.');
       return;
     }
     
-    // Call the parent onSubmit function
-    if (typeof onSubmit === 'function') {
-      onSubmit();
-    }
+    // Call the parent onSubmit function directly
+    onSubmit();
   };
   
   const handleNext = () => {
@@ -126,6 +130,10 @@ const DecisionForm = ({ activities, onAddActivity, onRemoveActivity, onInputChan
     const allFields = fieldPages.flat();
     return allFields.indexOf(fieldName) + 1;
   };
+  
+  // Check if this is the last activity and last step
+  const isLastActivity = currentActivityIndex === activities.length - 1;
+  const isLastStep = currentStep === fieldPages.length;
   
   return (
     <div className="decision-form-container">
@@ -222,7 +230,7 @@ const DecisionForm = ({ activities, onAddActivity, onRemoveActivity, onInputChan
             <span className="button-icon">&#x2190;</span> Back
           </button>
           
-          {currentStep === fieldPages.length && currentActivityIndex === activities.length - 1 ? (
+          {isLastStep && isLastActivity ? (
             <button 
               type="button" 
               className="nav-button submit"

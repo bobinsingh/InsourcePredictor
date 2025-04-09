@@ -9,7 +9,7 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background-color: #27b0df;
+  background-color: #4a6da7;
   color: white;
   border: none;
   font-size: 12px;
@@ -22,7 +22,7 @@
 }
 
 .tooltip-button:hover {
-  background-color: #27b0df;
+  background-color: #4a6da7;
 }
 
 .tooltip-content {
