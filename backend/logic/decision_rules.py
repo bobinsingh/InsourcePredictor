@@ -178,5 +178,21 @@ def determine_outcome(data: Dict[str, Any]) -> str:
     if legal_requirement == "Yes" and specialised_skill_excel == "High" and similarity_with_current_scopes == "Yes" and risks == "No" and duration == "Long" and strategic_fit == "Yes" and affordability == "Yes":
         return "Insource or create in-house capacity"
     
-    # Default case if no condition is matched
-    return "Requires Further Analysis"
+    # More focused fallback logic that preserves the intent of the decision tree
+    # Rather than having a generic default, we use priority-based classification
+    
+    # Step 1: Check if this should be eliminated
+    if (frequency_excel == "No" and legal_requirement == "No") or risk_tolerance == "Inside":
+        return "Eliminate"
+        
+    # Step 2: Check criteria for insourcing
+    if (specialised_skill_excel == "High" and similarity_with_current_scopes == "Yes" and 
+        strategic_fit == "Yes" and affordability == "Yes" and 
+        (core == "Yes" or legal_requirement == "Yes")):
+        return "Insource or create in-house capacity"
+        
+    # Step 3: Check if we have existing capacity
+    if skill_capacity == "Yes":
+        return "Current Outsource"
+    else:
+        return "New Outsource"
