@@ -155,37 +155,15 @@ function App() {
     setShowResults(false);
   };
   
-  const handleExportExcel = async (existingFile = null) => {
+  const handleExportExcel = async () => {
     try {
       const requestData = prepareRequestData();
       
-      let response;
-      
-      if (existingFile) {
-        // Create form data for file upload
-        const formData = new FormData();
-        formData.append('existing_file', existingFile);
-        
-        // Append the JSON data as a string
-        formData.append('request', JSON.stringify(requestData));
-        
-        response = await axios.post(
-          `${API_BASE_URL}/update-excel`, 
-          formData,
-          { 
-            responseType: 'blob',
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-          }
-        );
-      } else {
-        response = await axios.post(
-          `${API_BASE_URL}/export-excel`, 
-          requestData, 
-          { responseType: 'blob' }
-        );
-      }
+      const response = await axios.post(
+        `${API_BASE_URL}/export-excel`, 
+        requestData, 
+        { responseType: 'blob' }
+      );
       
       // Create a Blob from the response data
       const blob = new Blob([response.data], { 
@@ -196,7 +174,7 @@ function App() {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', existingFile ? existingFile.name : 'sourcing_decisions.xlsx');
+      link.setAttribute('download', 'sourcing_decisions.xlsx');
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -208,10 +186,14 @@ function App() {
   
   return (
     <div className="app-container">
-      <header className="app-header">
-        <h1>Sourcing Decision Tool</h1>
-        <p>Determine optimal sourcing strategies based on multiple factors</p>
-      </header>
+      <div className="top-bar">
+        <div className="top-bar-content">
+          <h1>EGCA Sourcing Decision Tool</h1>
+          <div className="logo-container">
+            <img src="/EGCA Light.png" alt="EGCA Logo" className="logo" />
+          </div>
+        </div>
+      </div>
       
       <main className="app-main">
         {!showResults ? (

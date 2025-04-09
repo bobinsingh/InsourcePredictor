@@ -1,54 +1,71 @@
 /* Tooltip styles */
 .tooltip-container {
-    display: inline-block;
-    position: relative;
-    margin-left: 8px;
-  }
-  
-  .tooltip-button {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    font-size: 12px;
-    font-weight: bold;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .tooltip-content {
-    position: absolute;
-    top: calc(100% + 5px);
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #333;
-    color: white;
-    padding: 10px 15px;
-    border-radius: 4px;
-    width: 250px;
-    z-index: 1000;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    font-size: 14px;
-    line-height: 1.4;
-  }
-  
-  .tooltip-content::before {
-    content: "";
-    position: absolute;
-    top: -6px;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 0 6px 6px 6px;
-    border-style: solid;
-    border-color: transparent transparent #333 transparent;
-  }
-  
-  .form-group .field-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 10px;
-  }
+  display: inline-block;
+  position: relative;
+  margin-left: 8px;
+}
+
+.tooltip-button {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #27b0df;
+  color: white;
+  border: none;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.tooltip-button:hover {
+  background-color: #27b0df;
+}
+
+.tooltip-content {
+  position: absolute;
+  top: calc(100% + 5px);
+  right: 0;
+  background-color: #fff;
+  color: #333;
+  padding: 8px 12px;
+  border-radius: 4px;
+  width: 220px;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  font-size: 12px;
+  line-height: 1.4;
+  border: 1px solid #e5e7eb;
+}
+
+.tooltip-content::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  right: 8px;
+  transform: translateX(-50%);
+  border-width: 0 6px 6px 6px;
+  border-style: solid;
+  border-color: transparent transparent #e5e7eb transparent;
+}
+
+.tooltip-content::after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  right: 8px;
+  transform: translateX(-50%);
+  border-width: 0 5px 5px 5px;
+  border-style: solid;
+  border-color: transparent transparent #fff transparent;
+}
+
+.form-group .field-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  justify-content: space-between;
+}

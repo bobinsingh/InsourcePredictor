@@ -1,32 +1,31 @@
 import React, { useState } from 'react';
-import FormNavigation from './FormNavigation';
+import Tooltip from './Tooltip';
 
 const DecisionForm = ({ activities, onAddActivity, onRemoveActivity, onInputChange, onSubmit }) => {
-  const [currentStep, setCurrentStep] = useState(1);
   const [currentActivityIndex, setCurrentActivityIndex] = useState(0);
   const [selectedField, setSelectedField] = useState(null);
+  const [currentStep, setCurrentStep] = useState(1);
   
-  const formSteps = [
-    { fields: ['activity_name', 'activity_type', 'business_case'], title: 'Activity Details' },
-    { fields: ['core', 'legal_requirement', 'risks'], title: 'Core Requirements' },
-    { fields: ['risk_tolerance', 'frequency', 'specialised_skill'], title: 'Risk & Skills' },
-    { fields: ['similarity_with_current_scopes', 'skill_capacity', 'duration'], title: 'Capacity & Duration' },
-    { fields: ['affordability', 'strategic_fit'], title: 'Business Alignment' },
+  // Group fields into pages (6 per page)
+  const fieldPages = [
+    ['activity_name', 'activity_type', 'business_case', 'core', 'legal_requirement', 'risks'],
+    ['risk_tolerance', 'frequency', 'specialised_skill', 'similarity_with_current_scopes', 'skill_capacity', 'duration'],
+    ['affordability', 'strategic_fit']
   ];
   
   const fieldLabels = {
     activity_name: 'Activity Name',
     activity_type: 'Activity Type',
     business_case: 'Business case',
-    core: 'Core ',
+    core: 'Core',
     legal_requirement: 'Legal requirement',
     risks: 'Risks',
-    risk_tolerance: 'Risk tolerance ',
+    risk_tolerance: 'Risk tolerance',
     frequency: 'Frequency',
     specialised_skill: 'Specialised Skill',
     similarity_with_current_scopes: 'Similarity with current scopes',
     skill_capacity: 'Skill capacity',
-    duration: 'Duration ',
+    duration: 'Duration',
     affordability: 'Affordability & Transferable Skill',
     strategic_fit: 'Strategic fit and Business case'
   };
@@ -63,28 +62,6 @@ const DecisionForm = ({ activities, onAddActivity, onRemoveActivity, onInputChan
     strategic_fit: ['Yes', 'No', '']
   };
   
-  const handleNext = () => {
-    if (currentStep < formSteps.length) {
-      setCurrentStep(currentStep + 1);
-      setSelectedField(null);
-    } else if (currentActivityIndex < activities.length - 1) {
-      setCurrentActivityIndex(currentActivityIndex + 1);
-      setCurrentStep(1);
-      setSelectedField(null);
-    }
-  };
-  
-  const handleBack = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-      setSelectedField(null);
-    } else if (currentActivityIndex > 0) {
-      setCurrentActivityIndex(currentActivityIndex - 1);
-      setCurrentStep(formSteps.length);
-      setSelectedField(null);
-    }
-  };
-  
   const handleSkipToActivity = (index) => {
     setCurrentActivityIndex(index);
     setCurrentStep(1);
@@ -94,18 +71,12 @@ const DecisionForm = ({ activities, onAddActivity, onRemoveActivity, onInputChan
   const handleFormSubmit = () => {
     // Verify all required fields are filled for the current activity
     const currentActivity = activities[currentActivityIndex];
-    const currentRequiredFields = formSteps.flatMap(step => 
-      step.fields.filter(field => 
-        field !== 'activity_name' && 
-        field !== 'activity_type' && 
-        field !== 'legal_requirement' && 
-        field !== 'risks' && 
-        field !== 'risk_tolerance' && 
-        field !== 'strategic_fit'
-      )
-    );
+    const requiredFields = [
+      'business_case', 'core', 'frequency', 'specialised_skill',
+      'similarity_with_current_scopes', 'skill_capacity', 'duration', 'affordability'
+    ];
     
-    const missingFields = currentRequiredFields.some(field => !currentActivity[field]);
+    const missingFields = requiredFields.some(field => !currentActivity[field]);
     
     if (missingFields) {
       alert('Please fill in all required fields before submitting.');
@@ -115,6 +86,24 @@ const DecisionForm = ({ activities, onAddActivity, onRemoveActivity, onInputChan
     // Call the parent onSubmit function
     if (typeof onSubmit === 'function') {
       onSubmit();
+    }
+  };
+  
+  const handleNext = () => {
+    if (currentStep < fieldPages.length) {
+      setCurrentStep(currentStep + 1);
+    } else if (currentActivityIndex < activities.length - 1) {
+      setCurrentActivityIndex(currentActivityIndex + 1);
+      setCurrentStep(1);
+    }
+  };
+  
+  const handleBack = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    } else if (currentActivityIndex > 0) {
+      setCurrentActivityIndex(currentActivityIndex - 1);
+      setCurrentStep(fieldPages.length);
     }
   };
   
@@ -129,12 +118,19 @@ const DecisionForm = ({ activities, onAddActivity, onRemoveActivity, onInputChan
     return <div>Error: No activity found at index {currentActivityIndex}</div>;
   }
   
-  const currentFields = formSteps[currentStep - 1].fields;
+  const currentFields = fieldPages[currentStep - 1];
+  const totalSteps = fieldPages.length;
+  
+  // Calculate the question number for each field based on its position in all pages
+  const getQuestionNumber = (fieldName) => {
+    const allFields = fieldPages.flat();
+    return allFields.indexOf(fieldName) + 1;
+  };
   
   return (
     <div className="decision-form-container">
       <div className="form-header">
-        <h2>Activity {currentActivityIndex + 1} of {activities.length}: {formSteps[currentStep - 1].title}</h2>
+        <h2>Activity {currentActivityIndex + 1} of {activities.length}: Page {currentStep} of {totalSteps}</h2>
         
         {activities.length > 1 && (
           <div className="activity-tabs">
@@ -153,15 +149,16 @@ const DecisionForm = ({ activities, onAddActivity, onRemoveActivity, onInputChan
       
       <div className="form-content-container">
         <div className="questions-panel">
-          {currentFields.map((field, index) => (
+          {currentFields.map((field) => (
             <div 
               key={field} 
               className={`form-group ${selectedField === field ? 'selected' : ''}`}
               onClick={() => setSelectedField(field)}
             >
               <div className="field-header">
-                <div className="field-number">{index + 1}</div>
+                <div className="field-number">{getQuestionNumber(field)}</div>
                 <label>{fieldLabels[field]}</label>
+                <Tooltip content={fieldTooltips[field]} />
               </div>
               
               {field === 'activity_name' || field === 'activity_type' ? (
@@ -203,10 +200,10 @@ const DecisionForm = ({ activities, onAddActivity, onRemoveActivity, onInputChan
               </>
             ) : (
               <>
-                <h4>{fieldLabels[currentFields[0]]}</h4>
-                <p>{fieldTooltips[currentFields[0]]}</p>
+                <h4>Click on any field for more information</h4>
+                <p>Select any field to view its detailed description here.</p>
                 <div className="description-hint">
-                  <p>Click on any question to view its description here.</p>
+                  <p>All required fields must be completed before submission.</p>
                 </div>
               </>
             )}
@@ -214,17 +211,60 @@ const DecisionForm = ({ activities, onAddActivity, onRemoveActivity, onInputChan
         </div>
       </div>
       
-      <FormNavigation 
-      currentStep={currentStep}
-      totalSteps={formSteps.length}
-      onNext={handleNext}
-      onBack={handleBack}
-      isLastActivity={currentActivityIndex === activities.length - 1}
-      onAddActivity={onAddActivity}
-      onRemoveActivity={() => onRemoveActivity(currentActivity.id)}
-      canRemove={activities.length > 1}
-      onSubmit={handleFormSubmit}
-    />
+      <div className="form-navigation">
+        <div className="nav-buttons">
+          <button 
+            type="button" 
+            className="nav-button back" 
+            onClick={handleBack}
+            disabled={currentStep === 1 && currentActivityIndex === 0}
+          >
+            <span className="button-icon">&#x2190;</span> Back
+          </button>
+          
+          {currentStep === fieldPages.length && currentActivityIndex === activities.length - 1 ? (
+            <button 
+              type="button" 
+              className="nav-button submit"
+              onClick={handleFormSubmit}
+            >
+              Submit <span className="button-icon">&#x2714;</span>
+            </button>
+          ) : (
+            <button 
+              type="button" 
+              className="nav-button next"
+              onClick={handleNext}
+            >
+              Next <span className="button-icon">&#x2192;</span>
+            </button>
+          )}
+        </div>
+        
+        <div className="activity-buttons">
+          <button 
+            type="button" 
+            className="activity-button add"
+            onClick={onAddActivity}
+          >
+            + Add Activity
+          </button>
+          
+          {activities.length > 1 && (
+            <button 
+              type="button" 
+              className="activity-button remove"
+              onClick={() => onRemoveActivity(currentActivity.id)}
+            >
+              - Remove Activity
+            </button>
+          )}
+        </div>
+        
+        <div className="step-indicator">
+          {currentStep} of {totalSteps}
+        </div>
+      </div>
     </div>
   );
 };

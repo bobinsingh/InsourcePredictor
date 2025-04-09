@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import './Tooltip.css';
 
 const Tooltip = ({ content }) => {
   const [showTooltip, setShowTooltip] = useState(false);
@@ -12,7 +13,7 @@ const Tooltip = ({ content }) => {
         onClick={() => setShowTooltip(!showTooltip)}
         aria-label="Information"
       >
-        i
+        ?
       </button>
       
       {showTooltip && (

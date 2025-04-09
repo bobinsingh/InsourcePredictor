@@ -1,9 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React from 'react';
 import DataTable from './DataTable';
 
 const ResultsDisplay = ({ results, onBackToForm, onExportExcel, onUpdateOutcomes }) => {
-  const fileInputRef = useRef(null);
-  
   // Group results by outcome
   const groupResultsByOutcome = (resultsData) => {
     if (!Array.isArray(resultsData)) return {};
@@ -60,16 +58,6 @@ const ResultsDisplay = ({ results, onBackToForm, onExportExcel, onUpdateOutcomes
       default:
         return 'Further analysis required';
     }
-  };
-  
-  const handleFileUpload = (event) => {
-    if (event.target.files && event.target.files[0]) {
-      onExportExcel(event.target.files[0]);
-    }
-  };
-  
-  const handleUpdateExistingFile = () => {
-    fileInputRef.current.click();
   };
   
   // Ensure results is an array, even if empty
@@ -132,23 +120,6 @@ const ResultsDisplay = ({ results, onBackToForm, onExportExcel, onUpdateOutcomes
           >
             Export to Excel
           </button>
-          
-          <button 
-            type="button" 
-            className="action-button update-excel"
-            onClick={handleUpdateExistingFile}
-          >
-            Update Existing Excel
-          </button>
-          
-          {/* Hidden file input */}
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            onChange={handleFileUpload} 
-            style={{ display: 'none' }} 
-            accept=".xlsx" 
-          />
         </div>
       </div>
     </div>
