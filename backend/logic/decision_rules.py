@@ -39,6 +39,10 @@ def determine_outcome(data: Dict[str, Any]) -> str:
     if business_case == "Yes" and core == "No" and legal_requirement == "No" and frequency_excel == "No":
         return "Eliminate"
     
+    # Additional eliminate condition - corporate level activities that are not core
+    if business_case == "Yes" and core == "No" and legal_requirement == "No":
+        return "Eliminate"
+    
     if frequency_excel == "Yes" and risk_tolerance == "Inside":
         return "Eliminate"
     
@@ -182,7 +186,7 @@ def determine_outcome(data: Dict[str, Any]) -> str:
     # Rather than having a generic default, we use priority-based classification
     
     # Step 1: Check if this should be eliminated
-    if (frequency_excel == "No" and legal_requirement == "No") or risk_tolerance == "Inside":
+    if (frequency_excel == "No" and legal_requirement == "No") or risk_tolerance == "Inside" or (core == "No" and legal_requirement == "No"):
         return "Eliminate"
         
     # Step 2: Check criteria for insourcing
