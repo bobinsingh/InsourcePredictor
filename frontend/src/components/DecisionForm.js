@@ -86,16 +86,6 @@ const DecisionForm = ({
     }
   }, [currentActivityIndex, externalSetCurrentActivityIndex, externalCurrentActivityIndex]);
   
-  // Save form state to localStorage whenever activities change
-  useEffect(() => {
-    // Only save if we have activities to save
-    if (activities && activities.length > 0) {
-      localStorage.setItem('egcaFormActivities', JSON.stringify(activities));
-      localStorage.setItem('egcaFormCurrentActivity', currentActivityIndex.toString());
-      localStorage.setItem('egcaFormCurrentStep', currentStep.toString());
-    }
-  }, [activities, currentActivityIndex, currentStep]);
-  
   // Store initial activity states when component is mounted or updatingActivityId changes
   useEffect(() => {
     // If we're updating an activity, store the initial states
@@ -113,6 +103,7 @@ const DecisionForm = ({
         const updatingIndex = activities.findIndex(activity => activity.id === updatingActivityId);
         if (updatingIndex >= 0) {
           setCurrentActivityIndex(updatingIndex);
+          setCurrentStep(1); // Reset to first step when updating
         }
       }
     }
@@ -137,26 +128,27 @@ const DecisionForm = ({
   };
   
   const handleSkipToActivity = (index) => {
+    // Save form data before switching
     setCurrentActivityIndex(index);
     setCurrentStep(1);
     setSelectedField(null);
   };
 
   const handleFormSubmit = () => {
-    // Verify all required fields are filled for all activities
+    // Verify all required fields are filled for the current activity
     const requiredFields = [
       'business_case', 'core', 'frequency', 'specialised_skill',
       'similarity_with_current_scopes', 'skill_capacity', 'duration', 'affordability'
     ];
     
-    let missingFields = false;
+    const currentActivity = activities[currentActivityIndex];
     
-    for (const activity of activities) {
-      if (requiredFields.some(field => !activity[field])) {
-        missingFields = true;
-        break;
-      }
+    if (!currentActivity) {
+      alert('No activity selected.');
+      return;
     }
+    
+    let missingFields = requiredFields.some(field => !currentActivity[field]);
     
     if (missingFields) {
       alert('Please fill in all required fields before submitting.');
@@ -310,7 +302,7 @@ const DecisionForm = ({
             <span className="button-icon">&#x2190;</span> Back
           </button>
           
-          {isLastStep && isLastActivity ? (
+          {isLastStep ? (
             <button 
               type="button" 
               className="nav-button submit"

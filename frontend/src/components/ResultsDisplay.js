@@ -1,7 +1,7 @@
 import React from 'react';
 import DataTable from './DataTable';
 
-const ResultsDisplay = ({ results, onBackToForm, onExportExcel, onUpdateOutcomes }) => {
+const ResultsDisplay = ({ results, onBackToForm, onExportExcel, onUpdateOutcomes, showUpdateButton = true }) => {
   // Group results by outcome
   const groupResultsByOutcome = (resultsData) => {
     if (!Array.isArray(resultsData)) return {};
@@ -18,6 +18,7 @@ const ResultsDisplay = ({ results, onBackToForm, onExportExcel, onUpdateOutcomes
   
   // Create columns for the data table
   const columns = [
+    { name: '#', selector: row => row.sequentialNumber || '-', sortable: true, width: '60px' },
     { name: 'Activity Name', selector: row => row.activity_name, sortable: true },
     { name: 'Activity Type', selector: row => row.activity_type, sortable: true },
     { name: 'Business case', selector: row => row.business_case, sortable: true },
@@ -32,7 +33,21 @@ const ResultsDisplay = ({ results, onBackToForm, onExportExcel, onUpdateOutcomes
     { name: 'Duration', selector: row => row.duration, sortable: true },
     { name: 'Affordability & Transferable Skill', selector: row => row.affordability, sortable: true },
     { name: 'Strategic fit and Business case', selector: row => row.strategic_fit, sortable: true },
-    { name: 'Outcome', selector: row => row.outcome, sortable: true }
+    { name: 'Outcome', selector: row => row.outcome, sortable: true },
+    { 
+      name: 'Date & Time', 
+      selector: row => {
+        if (!row.timestamp) return '-';
+        // Format timestamp to a readable format
+        try {
+          const date = new Date(row.timestamp);
+          return date.toLocaleString();
+        } catch (e) {
+          return row.timestamp || '-';
+        }
+      }, 
+      sortable: true 
+    }
   ];
 
   // Helper function to get the CSS class for each outcome type
@@ -67,7 +82,7 @@ const ResultsDisplay = ({ results, onBackToForm, onExportExcel, onUpdateOutcomes
   return (
     <div className="results-display">
       <div className="results-header">
-        <h2>Decision Results</h2>
+        <h2>Decision Results {safeResults.length > 1 ? `(${safeResults.length} Activities)` : safeResults.length === 1 ? `for: ${safeResults[0].activity_name}` : ''}</h2>
       </div>
       
       <div className="results-summary">
@@ -103,13 +118,15 @@ const ResultsDisplay = ({ results, onBackToForm, onExportExcel, onUpdateOutcomes
             Back to Form
           </button>
           
-          <button 
-            type="button" 
-            className="action-button update"
-            onClick={onUpdateOutcomes}
-          >
-            Update Outcomes
-          </button>
+          {showUpdateButton && (
+            <button 
+              type="button" 
+              className="action-button update"
+              onClick={onUpdateOutcomes}
+            >
+              Update Outcomes
+            </button>
+          )}
         </div>
         
         <div className="action-group-right">
