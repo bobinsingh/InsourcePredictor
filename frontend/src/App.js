@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import DecisionForm from './components/DecisionForm';
 import ResultsDisplay from './components/ResultsDisplay';
@@ -53,15 +53,26 @@ function App() {
   const [lastSubmissions, setLastSubmissions] = useState({});
   const [submittedActivityIds, setSubmittedActivityIds] = useState([]);
   
+  // Initialize form data once on mount
   useEffect(() => {
     const initialFormData = {};
     activities.forEach(activity => {
       initialFormData[activity.id] = { ...activity };
     });
-    setActivityFormData(prevData => ({ ...prevData, ...initialFormData }));
-  }, [activities]);
+    setActivityFormData(initialFormData);
+  }, []); // Only run once on mount
   
-  const handleAddActivity = () => {
+  // Separate effect to update form data when activities change
+  useEffect(() => {
+    const updatedFormData = {};
+    activities.forEach(activity => {
+      // Preserve existing form data if it exists
+      updatedFormData[activity.id] = activityFormData[activity.id] || { ...activity };
+    });
+    setActivityFormData(updatedFormData);
+  }, [activities]); // Only triggered when activities array changes
+  
+  const handleAddActivity = useCallback(() => {
     const newId = activities.length > 0 ? Math.max(...activities.map(a => a.id)) + 1 : 1;
     const newActivity = {
       id: newId,
@@ -81,15 +92,14 @@ function App() {
       strategic_fit: ''
     };
     
-    setActivities([...activities, newActivity]);
-    
+    setActivities(prevActivities => [...prevActivities, newActivity]);
     setActivityFormData(prevData => ({
       ...prevData,
       [newId]: { ...newActivity }
     }));
-  };
+  }, [activities]);
   
-  const handleRemoveActivity = (id) => {
+  const handleRemoveActivity = useCallback((id) => {
     if (activities.length <= 1) {
       return;
     }
@@ -97,37 +107,60 @@ function App() {
     const indexToRemove = activities.findIndex(activity => activity.id === id);
     if (indexToRemove === -1) return;
     
+    // Create a new activities array without the removed activity
     const updatedActivities = activities.filter(activity => activity.id !== id);
-    
     setActivities(updatedActivities);
     
-    const updatedFormData = { ...activityFormData };
-    delete updatedFormData[id];
-    setActivityFormData(updatedFormData);
+    // Update form data
+    setActivityFormData(prevData => {
+      const newData = { ...prevData };
+      delete newData[id];
+      return newData;
+    });
     
-    const updatedResults = { ...activityResults };
-    delete updatedResults[id];
-    setActivityResults(updatedResults);
+    // Update results
+    setActivityResults(prevResults => {
+      const newResults = { ...prevResults };
+      // Remove all results for this activity
+      Object.keys(newResults).forEach(key => {
+        if (newResults[key].originalActivityId === id) {
+          delete newResults[key];
+        }
+      });
+      return newResults;
+    });
     
-    // Also remove from submitted list if it was there
+    // Update submitted IDs
     if (submittedActivityIds.includes(id)) {
-      setSubmittedActivityIds(submittedActivityIds.filter(actId => actId !== id));
+      setSubmittedActivityIds(prev => prev.filter(actId => actId !== id));
     }
+    
+    // Adjust current activity index
+    let newIndex = currentActivityIndex;
     
     if (indexToRemove === currentActivityIndex) {
-      if (indexToRemove >= updatedActivities.length) {
-        setCurrentActivityIndex(updatedActivities.length - 1);
-      }
+      // If we're removing the current activity, go to the previous one
+      newIndex = Math.max(0, indexToRemove - 1);
     } else if (indexToRemove < currentActivityIndex) {
-      setCurrentActivityIndex(currentActivityIndex - 1);
+      // If we're removing an activity before the current one, decrement
+      newIndex = currentActivityIndex - 1;
     }
-  };
-  
-  const handleInputChange = (id, field, value) => {
-    setActivities(activities.map(activity => 
-      activity.id === id ? { ...activity, [field]: value } : activity
-    ));
     
+    // Make sure the index is within bounds
+    newIndex = Math.min(newIndex, updatedActivities.length - 1);
+    setCurrentActivityIndex(newIndex);
+    
+  }, [activities, currentActivityIndex, submittedActivityIds]);
+  
+  const handleInputChange = useCallback((id, field, value) => {
+    // Update activities array for rendering
+    setActivities(prev => 
+      prev.map(activity => 
+        activity.id === id ? { ...activity, [field]: value } : activity
+      )
+    );
+    
+    // Update form data for submission
     setActivityFormData(prevData => ({
       ...prevData,
       [id]: {
@@ -135,9 +168,9 @@ function App() {
         [field]: value
       }
     }));
-  };
+  }, []);
   
-  const checkForMissingFields = (activityToCheck) => {
+  const checkForMissingFields = useCallback((activityToCheck) => {
     return !activityToCheck.business_case ||
            !activityToCheck.core || 
            !activityToCheck.frequency || 
@@ -146,9 +179,9 @@ function App() {
            !activityToCheck.skill_capacity || 
            !activityToCheck.duration || 
            !activityToCheck.affordability;
-  };
+  }, []);
   
-  const prepareRequestData = (activity) => {
+  const prepareRequestData = useCallback((activity) => {
     return {
       inputs: [{
         activity_name: activity.activity_name || 'Unnamed Activity',
@@ -167,9 +200,9 @@ function App() {
         strategic_fit: activity.strategic_fit || ''
       }]
     };
-  };
+  }, []);
   
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     try {
       const currentActivity = activities[currentActivityIndex];
       if (!currentActivity) return;
@@ -228,6 +261,22 @@ function App() {
       
       const uniqueKey = `${currentActivity.id}_${Date.now()}`;
       
+      setActivityResults(prevResults => ({
+        ...prevResults,
+        [uniqueKey]: {
+          ...result,
+          originalActivityId: currentActivity.id
+        }
+      }));
+      
+      // Add to submitted activities list
+      if (!submittedActivityIds.includes(currentActivity.id)) {
+        setSubmittedActivityIds(prev => [...prev, currentActivity.id]);
+      }
+      
+      setResultsSource('submit');
+      
+      // Calculate all results after state updates
       const updatedResults = {
         ...activityResults,
         [uniqueKey]: {
@@ -236,20 +285,12 @@ function App() {
         }
       };
       
-      setActivityResults(updatedResults);
-      
-      // Add to submitted activities list
-      if (!submittedActivityIds.includes(currentActivity.id)) {
-        setSubmittedActivityIds([...submittedActivityIds, currentActivity.id]);
-      }
-      
       const allResults = Object.values(updatedResults).map((resultItem, index) => ({
         ...resultItem,
         sequentialNumber: index + 1,
         timestamp: resultItem.timestamp || new Date().toISOString()
       }));
       
-      setResultsSource('submit');
       setResults(allResults);
       setShowResults(true);
       
@@ -266,9 +307,9 @@ function App() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [activities, currentActivityIndex, checkForMissingFields, lastSubmissions, prepareRequestData, activityResults, submittedActivityIds, notification, updatingActivityId]);
   
-  const handleViewResults = () => {
+  const handleViewResults = useCallback(() => {
     const allResults = [];
     
     Object.values(activityResults).forEach((result, index) => {
@@ -286,10 +327,10 @@ function App() {
     } else {
       alert('No results available. Please submit at least one activity first.');
     }
-  };
+  }, [activityResults]);
   
   // Renamed from handleUpdateOutcomes to handleEditForm
-  const handleEditForm = (activityId) => {
+  const handleEditForm = useCallback((activityId) => {
     const activityToUpdate = activities.find(activity => activity.id === activityId);
     
     if (activityToUpdate) {
@@ -304,32 +345,35 @@ function App() {
       setCurrentActivityIndex(0);
     }
     
-    // Only set notification once
+    // Only set notification once (without using setTimeout to avoid memory leaks)
     setNotification({
       type: 'info',
       message: 'Make your changes to the form and click Update to see the revised results.'
     });
-    
-    setTimeout(() => {
-      setNotification(null);
-    }, 3000);
-  };
+  }, [activities]);
+  
+  // Clear notification when component unmounts or when notification changes
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => {
+        setNotification(null);
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
   
   // Add new function to handle canceling edit
-  const handleCancelEdit = () => {
+  const handleCancelEdit = useCallback(() => {
     setUpdatingActivityId(null);
     
     setNotification({
       type: 'info',
       message: 'Edit mode canceled.'
     });
-    
-    setTimeout(() => {
-      setNotification(null);
-    }, 2000);
-  };
+  }, []);
   
-  const handleBackToForm = () => {
+  const handleBackToForm = useCallback(() => {
     setShowResults(false);
     setResultsSource('submit');
     
@@ -343,13 +387,13 @@ function App() {
       setCurrentActivityIndex(nonSubmittedActivityIndex);
     } else if (activities.length === 1 && submittedActivityIds.includes(activities[0].id)) {
       // If we only have one activity and it's submitted, create a new one
-      handleAddActivity();
+      const newActivity = handleAddActivity();
       // The new activity will become the last one, so set index accordingly
-      setCurrentActivityIndex(1); // New activity will be at index 1 after adding
+      setCurrentActivityIndex(activities.length); // This will point to the new activity
     }
-  };
+  }, [activities, submittedActivityIds, handleAddActivity]);
   
-  const handleExportExcel = async () => {
+  const handleExportExcel = useCallback(async () => {
     try {
       setIsLoading(true);
       
@@ -439,7 +483,7 @@ function App() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [activities, activityResults]);
   
   return (
     <div className="app-container">
@@ -487,7 +531,6 @@ function App() {
               onEditForm={handleEditForm}
               onCancelEdit={handleCancelEdit}
               submittedActivityIds={submittedActivityIds}
-              // Pass down props needed for view results and activity navigation
               onViewResults={handleViewResults}
               hasResults={Object.keys(activityResults).length > 0}
             />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Tooltip from './Tooltip';
 
 const DecisionForm = ({ 
@@ -17,17 +17,151 @@ const DecisionForm = ({
   onViewResults,
   hasResults
 }) => {
-  const [currentActivityIndex, setCurrentActivityIndex] = useState(externalCurrentActivityIndex || 0);
-  const [selectedField, setSelectedField] = useState(null);
-  const [currentStep, setCurrentStep] = useState(1);
-  const [initialActivityStates, setInitialActivityStates] = useState({});
-  
-  // Group fields into pages (6 per page)
+  // Define fieldPages at the top so it can be referenced in hooks
   const fieldPages = [
     ['activity_name', 'activity_type', 'business_case', 'core', 'legal_requirement', 'risks'],
     ['risk_tolerance', 'frequency', 'specialised_skill', 'similarity_with_current_scopes', 'skill_capacity', 'duration'],
     ['affordability', 'strategic_fit']
   ];
+  
+  // All hooks MUST be called at the top level, before any conditional returns
+  const [selectedField, setSelectedField] = useState(null);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [initialActivityStates, setInitialActivityStates] = useState({});
+  
+  // Use the external activity index directly instead of duplicating state
+  const currentActivityIndex = externalCurrentActivityIndex || 0;
+
+  // Store initial activity states when component is mounted or updatingActivityId changes
+  useEffect(() => {
+    // If we're updating an activity, store the initial states
+    if (updatingActivityId && activities && activities.length > 0) {
+      // Deep clone the activities to store their initial state
+      const activityStates = {};
+      activities.forEach(activity => {
+        activityStates[activity.id] = JSON.stringify(activity);
+      });
+      setInitialActivityStates(activityStates);
+      
+      // Only set the current activity index to the updating activity if we haven't
+      // explicitly navigated away from it (only do this once when updatingActivityId is first set)
+      if (!initialActivityStates[updatingActivityId]) {
+        const updatingIndex = activities.findIndex(activity => activity.id === updatingActivityId);
+        if (updatingIndex >= 0) {
+          externalSetCurrentActivityIndex(updatingIndex);
+          setCurrentStep(1); // Reset to first step when updating
+        }
+      }
+    }
+  }, [updatingActivityId, activities, externalSetCurrentActivityIndex, initialActivityStates]);
+  
+  // All useCallback hooks must be at the top level too
+  const handleSkipToActivity = useCallback((index) => {
+    externalSetCurrentActivityIndex(index);
+    setCurrentStep(1);
+    setSelectedField(null);
+  }, [externalSetCurrentActivityIndex]);
+
+  const isActivityModified = useCallback((activity) => {
+    if (!updatingActivityId || !initialActivityStates[activity.id]) {
+      return false;
+    }
+    
+    const initialState = JSON.parse(initialActivityStates[activity.id]);
+    
+    // Compare relevant fields
+    const fieldsToCheck = [
+      'business_case', 'core', 'legal_requirement', 'risks', 'risk_tolerance',
+      'frequency', 'specialised_skill', 'similarity_with_current_scopes',
+      'skill_capacity', 'duration', 'affordability', 'strategic_fit'
+    ];
+    
+    return fieldsToCheck.some(field => activity[field] !== initialState[field]);
+  }, [updatingActivityId, initialActivityStates]);
+  
+  const handleFormSubmit = useCallback(() => {
+    // Safety check if we don't have activities yet
+    if (!activities || activities.length === 0 || currentActivityIndex >= activities.length) {
+      return;
+    }
+    
+    const currentActivity = activities[currentActivityIndex];
+    if (!currentActivity) {
+      return;
+    }
+    
+    // Verify all required fields are filled for the current activity
+    const requiredFields = [
+      'business_case', 'core', 'frequency', 'specialised_skill',
+      'similarity_with_current_scopes', 'skill_capacity', 'duration', 'affordability'
+    ];
+    
+    let missingFields = requiredFields.some(field => !currentActivity[field]);
+    
+    if (missingFields) {
+      alert('Please fill in all required fields before submitting.');
+      return;
+    }
+    
+    // Call the parent onSubmit function directly
+    onSubmit();
+  }, [activities, currentActivityIndex, onSubmit]);
+  
+  const handleNext = useCallback(() => {
+    if (!activities || activities.length === 0) return;
+    
+    if (currentStep < fieldPages.length) {
+      setCurrentStep(currentStep + 1);
+    } else if (currentActivityIndex < activities.length - 1) {
+      externalSetCurrentActivityIndex(currentActivityIndex + 1);
+      setCurrentStep(1);
+    }
+  }, [currentStep, currentActivityIndex, activities, externalSetCurrentActivityIndex, fieldPages.length]); // Added fieldPages.length
+
+  const handleBack = useCallback(() => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    } else if (currentActivityIndex > 0) {
+      externalSetCurrentActivityIndex(currentActivityIndex - 1);
+      setCurrentStep(fieldPages.length); // Now we can use fieldPages.length directly
+    }
+  }, [currentStep, currentActivityIndex, externalSetCurrentActivityIndex, fieldPages.length]); // Added fieldPages.length
+  
+  // Handle Edit Form button click
+  const handleEditForm = useCallback(() => {
+    if (!activities || activities.length === 0 || currentActivityIndex >= activities.length) {
+      return;
+    }
+    
+    const currentActivity = activities[currentActivityIndex];
+    if (!currentActivity) return;
+    
+    if (onEditForm) {
+      onEditForm(currentActivity.id);
+    }
+  }, [activities, currentActivityIndex, onEditForm]);
+  
+  // Handle Cancel Edit button click
+  const handleCancelEdit = useCallback(() => {
+    if (onCancelEdit) {
+      onCancelEdit();
+    }
+  }, [onCancelEdit]);
+
+  const isNextButtonDisabled = useCallback(() => {
+    if (!activities || activities.length === 0 || currentActivityIndex >= activities.length) {
+      return true;
+    }
+    
+    const currentActivity = activities[currentActivityIndex];
+    if (!currentActivity) return true;
+    
+    // Enable Next button if we're in edit mode for this activity
+    if (updatingActivityId === currentActivity.id) return false;
+    
+    // Disable Next button if this activity has been submitted
+    return submittedActivityIds.includes(currentActivity.id);
+  }, [activities, currentActivityIndex, updatingActivityId, submittedActivityIds]);
   
   const fieldLabels = {
     activity_name: 'Activity Name',
@@ -78,145 +212,7 @@ const DecisionForm = ({
     strategic_fit: ['Yes', 'No', '']
   };
   
-  // Sync with external state when necessary
-  useEffect(() => {
-    if (externalCurrentActivityIndex !== undefined && externalCurrentActivityIndex !== currentActivityIndex) {
-      setCurrentActivityIndex(externalCurrentActivityIndex);
-    }
-  }, [externalCurrentActivityIndex]);
-  
-  // Update external index when local index changes
-  useEffect(() => {
-    if (externalSetCurrentActivityIndex && currentActivityIndex !== externalCurrentActivityIndex) {
-      externalSetCurrentActivityIndex(currentActivityIndex);
-    }
-  }, [currentActivityIndex, externalSetCurrentActivityIndex, externalCurrentActivityIndex]);
-  
-  // Store initial activity states when component is mounted or updatingActivityId changes
-  useEffect(() => {
-    // If we're updating an activity, store the initial states
-    if (updatingActivityId && activities && activities.length > 0) {
-      // Deep clone the activities to store their initial state
-      const activityStates = {};
-      activities.forEach(activity => {
-        activityStates[activity.id] = JSON.stringify(activity);
-      });
-      setInitialActivityStates(activityStates);
-      
-      // Only set the current activity index to the updating activity if we haven't
-      // explicitly navigated away from it (only do this once when updatingActivityId is first set)
-      if (!initialActivityStates[updatingActivityId]) {
-        const updatingIndex = activities.findIndex(activity => activity.id === updatingActivityId);
-        if (updatingIndex >= 0) {
-          setCurrentActivityIndex(updatingIndex);
-          setCurrentStep(1); // Reset to first step when updating
-        }
-      }
-    }
-  }, [updatingActivityId, activities]);
-  
-  // Check if the current activity has been modified (for update button logic)
-  const isActivityModified = (activity) => {
-    if (!updatingActivityId || !initialActivityStates[activity.id]) {
-      return false;
-    }
-    
-    const initialState = JSON.parse(initialActivityStates[activity.id]);
-    
-    // Compare relevant fields
-    const fieldsToCheck = [
-      'business_case', 'core', 'legal_requirement', 'risks', 'risk_tolerance',
-      'frequency', 'specialised_skill', 'similarity_with_current_scopes',
-      'skill_capacity', 'duration', 'affordability', 'strategic_fit'
-    ];
-    
-    return fieldsToCheck.some(field => activity[field] !== initialState[field]);
-  };
-  
-  // Check if the current activity has been submitted before
-  const isActivitySubmitted = (activityId) => {
-    if (!activityResults) return false;
-    
-    return Object.values(activityResults).some(result => 
-      result.originalActivityId === activityId
-    );
-  };
-  
-  // Check if the Next button should be disabled for the current activity
-  const isNextButtonDisabled = () => {
-    if (!currentActivity) return false;
-    
-    // Enable Next button if we're in edit mode for this activity
-    if (updatingActivityId === currentActivity.id) return false;
-    
-    // Disable Next button if this activity has been submitted
-    return submittedActivityIds.includes(currentActivity.id);
-  };
-
-  const handleSkipToActivity = (index) => {
-    setCurrentActivityIndex(index);
-    setCurrentStep(1);
-    setSelectedField(null);
-  };
-
-  const handleFormSubmit = () => {
-    // Verify all required fields are filled for the current activity
-    const requiredFields = [
-      'business_case', 'core', 'frequency', 'specialised_skill',
-      'similarity_with_current_scopes', 'skill_capacity', 'duration', 'affordability'
-    ];
-    
-    const currentActivity = activities[currentActivityIndex];
-    
-    if (!currentActivity) {
-      alert('No activity selected.');
-      return;
-    }
-    
-    let missingFields = requiredFields.some(field => !currentActivity[field]);
-    
-    if (missingFields) {
-      alert('Please fill in all required fields before submitting.');
-      return;
-    }
-    
-    // Call the parent onSubmit function directly
-    onSubmit();
-  };
-  
-  const handleNext = () => {
-    if (currentStep < fieldPages.length) {
-      setCurrentStep(currentStep + 1);
-    } else if (currentActivityIndex < activities.length - 1) {
-      setCurrentActivityIndex(currentActivityIndex + 1);
-      setCurrentStep(1);
-    }
-  };
-  
-  const handleBack = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    } else if (currentActivityIndex > 0) {
-      setCurrentActivityIndex(currentActivityIndex - 1);
-      setCurrentStep(fieldPages.length);
-    }
-  };
-  
-  // Handle Edit Form button click
-  const handleEditForm = () => {
-    if (onEditForm) {
-      onEditForm(currentActivity.id);
-    }
-  };
-  
-  // Handle Cancel Edit button click
-  const handleCancelEdit = () => {
-    if (onCancelEdit) {
-      onCancelEdit();
-    }
-  };
-  
-  // Ensure we have a valid activity
+  // Now check for valid activities after all hooks are called
   if (!activities || activities.length === 0 || currentActivityIndex >= activities.length) {
     return <div>Loading activities...</div>;
   }
@@ -236,8 +232,7 @@ const DecisionForm = ({
     return allFields.indexOf(fieldName) + 1;
   };
   
-  // Check if this is the last activity and last step
-  const isLastActivity = currentActivityIndex === activities.length - 1;
+  // Check if this is the last step
   const isLastStep = currentStep === fieldPages.length;
   
   // Check if we're in edit mode for the current activity
@@ -334,7 +329,7 @@ const DecisionForm = ({
           <div className="activity-tabs">
             {activities.map((activity, index) => (
               <button 
-                key={index}
+                key={activity.id} // Use activity.id for a stable key instead of index
                 className={`activity-tab ${index === currentActivityIndex ? 'active' : ''}`}
                 onClick={() => handleSkipToActivity(index)}
               >
