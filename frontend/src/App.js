@@ -51,6 +51,7 @@ function App() {
   const [activityFormData, setActivityFormData] = useState({});
   const [resultsSource, setResultsSource] = useState('submit');
   const [lastSubmissions, setLastSubmissions] = useState({});
+  const [submittedActivityIds, setSubmittedActivityIds] = useState([]);
   
   useEffect(() => {
     const initialFormData = {};
@@ -107,6 +108,11 @@ function App() {
     const updatedResults = { ...activityResults };
     delete updatedResults[id];
     setActivityResults(updatedResults);
+    
+    // Also remove from submitted list if it was there
+    if (submittedActivityIds.includes(id)) {
+      setSubmittedActivityIds(submittedActivityIds.filter(actId => actId !== id));
+    }
     
     if (indexToRemove === currentActivityIndex) {
       if (indexToRemove >= updatedActivities.length) {
@@ -232,6 +238,11 @@ function App() {
       
       setActivityResults(updatedResults);
       
+      // Add to submitted activities list
+      if (!submittedActivityIds.includes(currentActivity.id)) {
+        setSubmittedActivityIds([...submittedActivityIds, currentActivity.id]);
+      }
+      
       const allResults = Object.values(updatedResults).map((resultItem, index) => ({
         ...resultItem,
         sequentialNumber: index + 1,
@@ -321,6 +332,21 @@ function App() {
   const handleBackToForm = () => {
     setShowResults(false);
     setResultsSource('submit');
+    
+    // Find a non-submitted activity if available
+    const nonSubmittedActivityIndex = activities.findIndex(activity => 
+      !submittedActivityIds.includes(activity.id)
+    );
+    
+    if (nonSubmittedActivityIndex !== -1) {
+      // If we have a non-submitted activity, switch to it
+      setCurrentActivityIndex(nonSubmittedActivityIndex);
+    } else if (activities.length === 1 && submittedActivityIds.includes(activities[0].id)) {
+      // If we only have one activity and it's submitted, create a new one
+      handleAddActivity();
+      // The new activity will become the last one, so set index accordingly
+      setCurrentActivityIndex(1); // New activity will be at index 1 after adding
+    }
   };
   
   const handleExportExcel = async () => {
@@ -471,6 +497,7 @@ function App() {
               activityResults={activityResults}    // Pass activityResults to check submitted status
               onEditForm={handleEditForm}          // Pass the edit form function
               onCancelEdit={handleCancelEdit}      // Pass the cancel edit function
+              submittedActivityIds={submittedActivityIds} // Pass the list of submitted activity IDs
             />
           </div>
         ) : (

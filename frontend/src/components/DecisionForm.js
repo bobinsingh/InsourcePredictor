@@ -10,9 +10,10 @@ const DecisionForm = ({
   updatingActivityId,
   currentActivityIndex: externalCurrentActivityIndex,
   setCurrentActivityIndex: externalSetCurrentActivityIndex,
-  activityResults,  // Add this prop to check if activity has been submitted
-  onEditForm,       // Add this prop for edit functionality
-  onCancelEdit      // Add this prop for canceling edit
+  activityResults,
+  onEditForm,
+  onCancelEdit,
+  submittedActivityIds // Add this prop to check which activities are submitted
 }) => {
   const [currentActivityIndex, setCurrentActivityIndex] = useState(externalCurrentActivityIndex || 0);
   const [selectedField, setSelectedField] = useState(null);
@@ -137,6 +138,17 @@ const DecisionForm = ({
     return Object.values(activityResults).some(result => 
       result.originalActivityId === activityId
     );
+  };
+  
+  // Check if the Next button should be disabled for the current activity
+  const isNextButtonDisabled = () => {
+    if (!currentActivity) return false;
+    
+    // Enable Next button if we're in edit mode for this activity
+    if (updatingActivityId === currentActivity.id) return false;
+    
+    // Disable Next button if this activity has been submitted
+    return submittedActivityIds.includes(currentActivity.id);
   };
   
   const handleSkipToActivity = (index) => {
@@ -328,7 +340,7 @@ const DecisionForm = ({
             onClick={handleBack}
             disabled={currentStep === 1 && currentActivityIndex === 0}
           >
-            <span className="button-icon">&#x2190;</span> Back
+            <span className="button-icon">←</span> Back
           </button>
           
           {isLastStep ? (
@@ -339,27 +351,28 @@ const DecisionForm = ({
             >
               {updatingActivityId === currentActivity.id && isActivityModified(currentActivity) 
                 ? 'Update' 
-                : 'Submit'} <span className="button-icon">&#x2714;</span>
+                : 'Submit'} <span className="button-icon">✓</span>
             </button>
           ) : (
             <button 
               type="button" 
               className="nav-button next"
               onClick={handleNext}
+              disabled={isNextButtonDisabled()}
             >
-              Next <span className="button-icon">&#x2192;</span>
+              Next <span className="button-icon">→</span>
             </button>
           )}
           
           {/* Add Edit Form / Cancel Edit button */}
-          {isActivitySubmitted(currentActivity.id) && (
+          {submittedActivityIds.includes(currentActivity.id) && (
             <button 
               type="button" 
               className={`nav-button ${isEditingActivity ? 'back' : 'next'}`}
               onClick={isEditingActivity ? handleCancelEdit : handleEditForm}
             >
               {isEditingActivity ? 'Cancel Edit' : 'Edit Form'} 
-              <span className="button-icon">{isEditingActivity ? '&#x2715;' : '&#x270E;'}</span>
+              <span className="button-icon">{isEditingActivity ? '✕' : '✎'}</span>
             </button>
           )}
         </div>
