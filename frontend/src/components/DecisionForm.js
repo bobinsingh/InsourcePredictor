@@ -9,7 +9,10 @@ const DecisionForm = ({
   onSubmit, 
   updatingActivityId,
   currentActivityIndex: externalCurrentActivityIndex,
-  setCurrentActivityIndex: externalSetCurrentActivityIndex
+  setCurrentActivityIndex: externalSetCurrentActivityIndex,
+  activityResults,  // Add this prop to check if activity has been submitted
+  onEditForm,       // Add this prop for edit functionality
+  onCancelEdit      // Add this prop for canceling edit
 }) => {
   const [currentActivityIndex, setCurrentActivityIndex] = useState(externalCurrentActivityIndex || 0);
   const [selectedField, setSelectedField] = useState(null);
@@ -127,6 +130,15 @@ const DecisionForm = ({
     return fieldsToCheck.some(field => activity[field] !== initialState[field]);
   };
   
+  // Check if the current activity has been submitted before
+  const isActivitySubmitted = (activityId) => {
+    if (!activityResults) return false;
+    
+    return Object.values(activityResults).some(result => 
+      result.originalActivityId === activityId
+    );
+  };
+  
   const handleSkipToActivity = (index) => {
     // Save form data before switching
     setCurrentActivityIndex(index);
@@ -177,6 +189,20 @@ const DecisionForm = ({
     }
   };
   
+  // Handle Edit Form button click
+  const handleEditForm = () => {
+    if (onEditForm) {
+      onEditForm(currentActivity.id);
+    }
+  };
+  
+  // Handle Cancel Edit button click
+  const handleCancelEdit = () => {
+    if (onCancelEdit) {
+      onCancelEdit();
+    }
+  };
+  
   // Ensure we have a valid activity
   if (!activities || activities.length === 0 || currentActivityIndex >= activities.length) {
     return <div>Loading activities...</div>;
@@ -200,6 +226,9 @@ const DecisionForm = ({
   // Check if this is the last activity and last step
   const isLastActivity = currentActivityIndex === activities.length - 1;
   const isLastStep = currentStep === fieldPages.length;
+  
+  // Check if we're in edit mode for the current activity
+  const isEditingActivity = updatingActivityId === currentActivity.id;
   
   return (
     <div className="decision-form-container">
@@ -321,6 +350,18 @@ const DecisionForm = ({
               Next <span className="button-icon">&#x2192;</span>
             </button>
           )}
+          
+          {/* Add Edit Form / Cancel Edit button */}
+          {isActivitySubmitted(currentActivity.id) && (
+            <button 
+              type="button" 
+              className={`nav-button ${isEditingActivity ? 'back' : 'next'}`}
+              onClick={isEditingActivity ? handleCancelEdit : handleEditForm}
+            >
+              {isEditingActivity ? 'Cancel Edit' : 'Edit Form'} 
+              <span className="button-icon">{isEditingActivity ? '&#x2715;' : '&#x270E;'}</span>
+            </button>
+          )}
         </div>
         
         <div className="activity-buttons">
@@ -329,7 +370,7 @@ const DecisionForm = ({
             className="activity-button add"
             onClick={onAddActivity}
           >
-            + Add Activity
+            <span className="button-icon">+</span> Add Activity
           </button>
           
           {activities.length > 1 && (
@@ -338,7 +379,7 @@ const DecisionForm = ({
               className="activity-button remove"
               onClick={() => onRemoveActivity(currentActivity.id)}
             >
-              - Remove Activity
+              <span className="button-icon">-</span> Remove Activity
             </button>
           )}
         </div>

@@ -277,7 +277,8 @@ function App() {
     }
   };
   
-  const handleUpdateOutcomes = (activityId) => {
+  // Renamed from handleUpdateOutcomes to handleEditForm
+  const handleEditForm = (activityId) => {
     const activityToUpdate = activities.find(activity => activity.id === activityId);
     
     if (activityToUpdate) {
@@ -292,16 +293,29 @@ function App() {
       setCurrentActivityIndex(0);
     }
     
-    setShowResults(false);
     setNotification({
       type: 'info',
-      message: 'Make your changes to the form and click Submit to update the results.'
+      message: 'Make your changes to the form and click Update to see the revised results.'
     });
     
     // Reduced notification timeout from 5000ms to 3000ms
     setTimeout(() => {
       setNotification(null);
     }, 3000);
+  };
+  
+  // Add new function to handle canceling edit
+  const handleCancelEdit = () => {
+    setUpdatingActivityId(null);
+    
+    setNotification({
+      type: 'info',
+      message: 'Edit mode canceled.'
+    });
+    
+    setTimeout(() => {
+      setNotification(null);
+    }, 2000);
   };
   
   const handleBackToForm = () => {
@@ -454,6 +468,9 @@ function App() {
               updatingActivityId={updatingActivityId}
               currentActivityIndex={currentActivityIndex}
               setCurrentActivityIndex={setCurrentActivityIndex}
+              activityResults={activityResults}    // Pass activityResults to check submitted status
+              onEditForm={handleEditForm}          // Pass the edit form function
+              onCancelEdit={handleCancelEdit}      // Pass the cancel edit function
             />
           </div>
         ) : (
@@ -461,20 +478,7 @@ function App() {
             results={results}
             onBackToForm={handleBackToForm}
             onExportExcel={handleExportExcel}
-            showUpdateButton={resultsSource === 'submit'}
-            onUpdateOutcomes={() => {
-              if (results && results.length > 0) {
-                const activityName = results[0].activity_name;
-                const activityToUpdate = activities.find(activity => 
-                  activity.activity_name === activityName);
-                
-                if (activityToUpdate) {
-                  handleUpdateOutcomes(activityToUpdate.id);
-                } else {
-                  handleUpdateOutcomes(activities[currentActivityIndex].id);
-                }
-              }
-            }}
+            showUpdateButton={false}  // Remove Update Outcomes button from results page
           />
         )}
       </main>

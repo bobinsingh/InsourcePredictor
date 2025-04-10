@@ -1,7 +1,7 @@
 import React from 'react';
 import DataTable from './DataTable';
 
-const ResultsDisplay = ({ results, onBackToForm, onExportExcel, onUpdateOutcomes, showUpdateButton = true }) => {
+const ResultsDisplay = ({ results, onBackToForm, onExportExcel }) => {
   // Group results by outcome
   const groupResultsByOutcome = (resultsData) => {
     if (!Array.isArray(resultsData)) return {};
@@ -117,16 +117,6 @@ const ResultsDisplay = ({ results, onBackToForm, onExportExcel, onUpdateOutcomes
           >
             Back to Form
           </button>
-          
-          {showUpdateButton && (
-            <button 
-              type="button" 
-              className="action-button update"
-              onClick={onUpdateOutcomes}
-            >
-              Update Outcomes
-            </button>
-          )}
         </div>
         
         <div className="action-group-right">
