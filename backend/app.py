@@ -22,5 +22,5 @@ app.include_router(decision.router, prefix="/api/decision", tags=["decision"])
 async def root():
     return {"message": "Welcome to the Sourcing Decision Tool API"}
 
-if __name__ == "__main__":
-    uvicorn.run("app:app", host="0.0.0.0", port=8080, reload=True)
+# if __name__ == "__main__":
+#     uvicorn.run("app:app", host="0.0.0.0", port=8080, reload=True)
