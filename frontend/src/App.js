@@ -44,7 +44,6 @@ function App() {
   const [currentActivityIndex, setCurrentActivityIndex] = useState(0);
   const [results, setResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState(null);
   const [updatingActivityId, setUpdatingActivityId] = useState(null);
   const [activityResults, setActivityResults] = useState({});
@@ -210,8 +209,6 @@ function App() {
       
       const requestData = prepareRequestData(currentActivity);
       
-      setIsLoading(true);
-      
       const response = await makeApiCall(`${API_BASE_URL}/determine`, requestData);
       
       const result = response.data.results[0];
@@ -252,8 +249,6 @@ function App() {
     } catch (error) {
       console.error('Error submitting data:', error);
       alert('An error occurred while processing your request.');
-    } finally {
-      setIsLoading(false);
     }
   };
   
@@ -311,8 +306,6 @@ function App() {
   
   const handleExportExcel = async () => {
     try {
-      setIsLoading(true);
-      
       let blob;
       
       if (Object.keys(activityResults).length === 0) {
@@ -396,8 +389,6 @@ function App() {
     } catch (error) {
       console.error('Error exporting Excel:', error);
       alert('An error occurred while exporting to Excel.');
-    } finally {
-      setIsLoading(false);
     }
   };
   
@@ -413,13 +404,6 @@ function App() {
       </div>
       
       <main className="app-main">
-        {isLoading && (
-          <div className="loading-overlay">
-            <div className="loading-spinner"></div>
-            <p>Processing...</p>
-          </div>
-        )}
-        
         {notification && (
           <div className={`notification ${notification.type}`}>
             <span className="notification-message">{notification.message}</span>
