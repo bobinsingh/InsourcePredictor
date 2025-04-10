@@ -64,6 +64,53 @@ html, body {
   background-color: #f9fafb;
 }
 
+
+.top-navigation {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--mid-gray);
+  padding-bottom: 16px;
+}
+
+.top-navigation .action-button.view-results {
+  margin-right: 16px;
+  background-color: var(--dark-gray);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+
+.top-navigation .action-button.view-results:hover {
+  background-color: #4b5563;
+}
+
+.top-navigation .activity-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.top-navigation .activity-tab {
+  background-color: var(--light-gray);
+  border: none;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.top-navigation .activity-tab.active {
+  background-color: var(--dark-gray);
+  color: white;
+}
+
 /* Top Bar - no color */
 .top-bar {
   background-color: white;
@@ -189,9 +236,25 @@ html, body {
 }
 
 .button-container {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 16px;
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .top-navigation {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .top-navigation .action-button.view-results {
+    margin-bottom: 12px;
+    margin-right: 0;
+  }
+  
+  .top-navigation .activity-tabs {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
 }
 
 .action-button.view-results {

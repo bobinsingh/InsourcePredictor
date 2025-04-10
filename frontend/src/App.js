@@ -304,6 +304,7 @@ function App() {
       setCurrentActivityIndex(0);
     }
     
+    // Only set notification from here, removed duplicate notification
     setNotification({
       type: 'info',
       message: 'Make your changes to the form and click Update to see the revised results.'
@@ -347,6 +348,10 @@ function App() {
       // The new activity will become the last one, so set index accordingly
       setCurrentActivityIndex(1); // New activity will be at index 1 after adding
     }
+  };
+
+  const handleSkipToActivity = (index) => {
+    setCurrentActivityIndex(index);
   };
   
   const handleExportExcel = async () => {
@@ -474,16 +479,31 @@ function App() {
         
         {!showResults ? (
           <div className="form-container">
-            {Object.keys(activityResults).length > 0 && (
-              <div className="button-container">
+            {/* Moved Activity tabs and View Results button to the top navigation area */}
+            <div className="top-navigation">
+              {Object.keys(activityResults).length > 0 && (
                 <button 
                   className="action-button view-results" 
                   onClick={handleViewResults}
                 >
                   View Results
                 </button>
-              </div>
-            )}
+              )}
+              
+              {activities.length > 1 && (
+                <div className="activity-tabs">
+                  {activities.map((activity, index) => (
+                    <button 
+                      key={index}
+                      className={`activity-tab ${index === currentActivityIndex ? 'active' : ''}`}
+                      onClick={() => handleSkipToActivity(index)}
+                    >
+                      {(activity && activity.activity_name) ? activity.activity_name : `Activity ${index + 1}`}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             
             <DecisionForm 
               activities={activities}
@@ -494,10 +514,12 @@ function App() {
               updatingActivityId={updatingActivityId}
               currentActivityIndex={currentActivityIndex}
               setCurrentActivityIndex={setCurrentActivityIndex}
-              activityResults={activityResults}    // Pass activityResults to check submitted status
-              onEditForm={handleEditForm}          // Pass the edit form function
-              onCancelEdit={handleCancelEdit}      // Pass the cancel edit function
-              submittedActivityIds={submittedActivityIds} // Pass the list of submitted activity IDs
+              activityResults={activityResults}
+              onEditForm={handleEditForm}
+              onCancelEdit={handleCancelEdit}
+              submittedActivityIds={submittedActivityIds}
+              // Don't pass activity tabs to DecisionForm anymore as they're now in App.js
+              hideActivityTabs={true}
             />
           </div>
         ) : (
@@ -505,7 +527,7 @@ function App() {
             results={results}
             onBackToForm={handleBackToForm}
             onExportExcel={handleExportExcel}
-            showUpdateButton={false}  // Remove Update Outcomes button from results page
+            showUpdateButton={false}
           />
         )}
       </main>

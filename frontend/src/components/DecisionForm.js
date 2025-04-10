@@ -13,7 +13,8 @@ const DecisionForm = ({
   activityResults,
   onEditForm,
   onCancelEdit,
-  submittedActivityIds // Add this prop to check which activities are submitted
+  submittedActivityIds,
+  hideActivityTabs = false // New prop to hide activity tabs when they're shown in App.js
 }) => {
   const [currentActivityIndex, setCurrentActivityIndex] = useState(externalCurrentActivityIndex || 0);
   const [selectedField, setSelectedField] = useState(null);
@@ -150,13 +151,6 @@ const DecisionForm = ({
     // Disable Next button if this activity has been submitted
     return submittedActivityIds.includes(currentActivity.id);
   };
-  
-  const handleSkipToActivity = (index) => {
-    // Save form data before switching
-    setCurrentActivityIndex(index);
-    setCurrentStep(1);
-    setSelectedField(null);
-  };
 
   const handleFormSubmit = () => {
     // Verify all required fields are filled for the current activity
@@ -247,13 +241,14 @@ const DecisionForm = ({
       <div className="form-header">
         <h2>Activity {currentActivityIndex + 1} of {activities.length}: Page {currentStep} of {totalSteps}</h2>
         
-        {activities.length > 1 && (
+        {/* Activity tabs now moved to App.js, only shown here if hideActivityTabs is false */}
+        {!hideActivityTabs && activities.length > 1 && (
           <div className="activity-tabs">
             {activities.map((activity, index) => (
               <button 
                 key={index}
                 className={`activity-tab ${index === currentActivityIndex ? 'active' : ''}`}
-                onClick={() => handleSkipToActivity(index)}
+                onClick={() => setCurrentActivityIndex(index)}
               >
                 {(activity && activity.activity_name) ? activity.activity_name : `Activity ${index + 1}`}
               </button>
