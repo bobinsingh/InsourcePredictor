@@ -304,13 +304,12 @@ function App() {
       setCurrentActivityIndex(0);
     }
     
-    // Only set notification from here, removed duplicate notification
+    // Only set notification once
     setNotification({
       type: 'info',
       message: 'Make your changes to the form and click Update to see the revised results.'
     });
     
-    // Reduced notification timeout from 5000ms to 3000ms
     setTimeout(() => {
       setNotification(null);
     }, 3000);
@@ -348,10 +347,6 @@ function App() {
       // The new activity will become the last one, so set index accordingly
       setCurrentActivityIndex(1); // New activity will be at index 1 after adding
     }
-  };
-
-  const handleSkipToActivity = (index) => {
-    setCurrentActivityIndex(index);
   };
   
   const handleExportExcel = async () => {
@@ -479,32 +474,6 @@ function App() {
         
         {!showResults ? (
           <div className="form-container">
-            {/* Moved Activity tabs and View Results button to the top navigation area */}
-            <div className="top-navigation">
-              {Object.keys(activityResults).length > 0 && (
-                <button 
-                  className="action-button view-results" 
-                  onClick={handleViewResults}
-                >
-                  View Results
-                </button>
-              )}
-              
-              {activities.length > 1 && (
-                <div className="activity-tabs">
-                  {activities.map((activity, index) => (
-                    <button 
-                      key={index}
-                      className={`activity-tab ${index === currentActivityIndex ? 'active' : ''}`}
-                      onClick={() => handleSkipToActivity(index)}
-                    >
-                      {(activity && activity.activity_name) ? activity.activity_name : `Activity ${index + 1}`}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            
             <DecisionForm 
               activities={activities}
               onAddActivity={handleAddActivity}
@@ -518,8 +487,9 @@ function App() {
               onEditForm={handleEditForm}
               onCancelEdit={handleCancelEdit}
               submittedActivityIds={submittedActivityIds}
-              // Don't pass activity tabs to DecisionForm anymore as they're now in App.js
-              hideActivityTabs={true}
+              // Pass down props needed for view results and activity navigation
+              onViewResults={handleViewResults}
+              hasResults={Object.keys(activityResults).length > 0}
             />
           </div>
         ) : (
