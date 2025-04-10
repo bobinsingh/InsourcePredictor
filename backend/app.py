@@ -9,7 +9,7 @@ app = FastAPI(title="Sourcing Decision Tool API")
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # For development - restrict in production
+    allow_origins=["https://insource-predictor.vercel.app/"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -4,7 +4,7 @@ import DecisionForm from './components/DecisionForm';
 import ResultsDisplay from './components/ResultsDisplay';
 import './styles/styles.css';
 
-const API_BASE_URL = 'http://localhost:8000/api/decision';
+const API_BASE_URL = process.env.REACT_APP_API_URL
 
 function App() {
   const [activities, setActivities] = useState([{
