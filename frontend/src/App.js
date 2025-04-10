@@ -18,7 +18,15 @@ const makeApiCall = async (url, data, options = {}, retries = 3) => {
   }
 };
 
-const API_BASE_URL = process.env.REACT_APP_API_URL
+// Fix: Define a proper base URL
+// Option 1: Use environment variable but ensure it doesn't include "/decision" part
+// const API_BASE_URL = process.env.REACT_APP_API_URL || "/api";
+
+// Option 2: Use relative path for better compatibility with Vercel rewrites
+const API_BASE_URL = "/api/decision";
+
+// Option 3: If you prefer hardcoding for now (temporary solution)
+// const API_BASE_URL = "https://insource-backend-973299245530.africa-south1.run.app/api/decision";
 
 function App() {
   const [activities, setActivities] = useState([{
