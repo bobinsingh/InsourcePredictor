@@ -4,6 +4,20 @@ import DecisionForm from './components/DecisionForm';
 import ResultsDisplay from './components/ResultsDisplay';
 import './styles/styles.css';
 
+// Updated utility function that accepts additional axios options
+const makeApiCall = async (url, data, options = {}, retries = 3) => {
+  try {
+    return await axios.post(url, data, { timeout: 10000, ...options });
+  } catch (error) {
+    if (retries > 0 && (error.code === 'ECONNABORTED' || error.response?.status >= 500)) {
+      console.log(`Retrying request, ${retries} attempts left`);
+      await new Promise(r => setTimeout(r, 1000));
+      return makeApiCall(url, data, options, retries - 1);
+    }
+    throw error;
+  }
+};
+
 const API_BASE_URL = process.env.REACT_APP_API_URL
 
 function App() {
@@ -228,8 +242,8 @@ function App() {
       
       setIsLoading(true);
       
-      // Call API
-      const response = await axios.post(`${API_BASE_URL}/determine`, requestData);
+      // Call API with retry logic
+      const response = await makeApiCall(`${API_BASE_URL}/determine`, requestData);
       
       // Store the result for this specific activity with a unique key and timestamp
       const result = response.data.results[0];
@@ -372,7 +386,8 @@ function App() {
           }))
         };
         
-        const response = await axios.post(
+        // Use makeApiCall with retry logic and responseType option
+        const response = await makeApiCall(
           `${API_BASE_URL}/export-excel`, 
           requestData, 
           { responseType: 'blob' }
@@ -414,7 +429,8 @@ function App() {
           }))
         };
         
-        const response = await axios.post(
+        // Use makeApiCall with retry logic and responseType option
+        const response = await makeApiCall(
           `${API_BASE_URL}/export-excel`, 
           requestData, 
           { responseType: 'blob' }
