@@ -4,29 +4,23 @@ import DecisionForm from './components/DecisionForm';
 import ResultsDisplay from './components/ResultsDisplay';
 import './styles/styles.css';
 
-// Updated utility function that accepts additional axios options
-const makeApiCall = async (url, data, options = {}, retries = 3) => {
+// Optimized API call function with reduced timeout and no delays
+const makeApiCall = async (url, data, options = {}, retries = 2) => {
   try {
-    return await axios.post(url, data, { timeout: 10000, ...options });
+    // Reduced timeout from 10000ms to 5000ms for faster response
+    return await axios.post(url, data, { timeout: 5000, ...options });
   } catch (error) {
     if (retries > 0 && (error.code === 'ECONNABORTED' || error.response?.status >= 500)) {
       console.log(`Retrying request, ${retries} attempts left`);
-      await new Promise(r => setTimeout(r, 1000));
+      // No delay between retries for faster response
       return makeApiCall(url, data, options, retries - 1);
     }
     throw error;
   }
 };
 
-// Fix: Define a proper base URL
-// Option 1: Use environment variable but ensure it doesn't include "/decision" part
-// const API_BASE_URL = process.env.REACT_APP_API_URL || "/api";
-
-// Option 2: Use relative path for better compatibility with Vercel rewrites
+// Use relative path for API - works with Vercel rewrites
 const API_BASE_URL = "/api/decision";
-
-// Option 3: If you prefer hardcoding for now (temporary solution)
-// const API_BASE_URL = "https://insource-backend-973299245530.africa-south1.run.app/api/decision";
 
 function App() {
   const [activities, setActivities] = useState([{
@@ -47,29 +41,18 @@ function App() {
     strategic_fit: ''
   }]);
   
-  // Add state for current activity index to pass to the form
   const [currentActivityIndex, setCurrentActivityIndex] = useState(0);
-  
-  // Store all results
   const [results, setResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  // Added state for notification
   const [notification, setNotification] = useState(null);
-  // Track which specific activity is being updated
   const [updatingActivityId, setUpdatingActivityId] = useState(null);
-  // Store results for each activity separately to show individual results
   const [activityResults, setActivityResults] = useState({});
-  // Track activity form data to persist when switching between tabs
   const [activityFormData, setActivityFormData] = useState({});
-  // Track results source
-  const [resultsSource, setResultsSource] = useState('submit'); // 'submit' or 'viewButton'
-  // Store last submission data for comparison
+  const [resultsSource, setResultsSource] = useState('submit');
   const [lastSubmissions, setLastSubmissions] = useState({});
   
-  // Save form data when switching between activity tabs
   useEffect(() => {
-    // When activities change or when component mounts, initialize form data
     const initialFormData = {};
     activities.forEach(activity => {
       initialFormData[activity.id] = { ...activity };
@@ -99,7 +82,6 @@ function App() {
     
     setActivities([...activities, newActivity]);
     
-    // Initialize form data for the new activity
     setActivityFormData(prevData => ({
       ...prevData,
       [newId]: { ...newActivity }
@@ -107,51 +89,39 @@ function App() {
   };
   
   const handleRemoveActivity = (id) => {
-    // Always ensure we have at least one activity
     if (activities.length <= 1) {
-      return; // Don't remove if this is the last activity
+      return;
     }
     
-    // Find the index of the activity to be removed
     const indexToRemove = activities.findIndex(activity => activity.id === id);
-    if (indexToRemove === -1) return; // Activity not found
+    if (indexToRemove === -1) return;
     
-    // Create a new array without the removed activity
     const updatedActivities = activities.filter(activity => activity.id !== id);
     
-    // Update the activities state
     setActivities(updatedActivities);
     
-    // Remove form data for this activity
     const updatedFormData = { ...activityFormData };
     delete updatedFormData[id];
     setActivityFormData(updatedFormData);
     
-    // Remove results for this activity
     const updatedResults = { ...activityResults };
     delete updatedResults[id];
     setActivityResults(updatedResults);
     
-    // If the removed activity was the current one, adjust the current index
     if (indexToRemove === currentActivityIndex) {
-      // If removing the last activity, move to the previous one
       if (indexToRemove >= updatedActivities.length) {
         setCurrentActivityIndex(updatedActivities.length - 1);
       }
-      // Otherwise stay at the same index (which will now point to the next activity)
     } else if (indexToRemove < currentActivityIndex) {
-      // If removing an activity before the current one, adjust the index down
       setCurrentActivityIndex(currentActivityIndex - 1);
     }
   };
   
   const handleInputChange = (id, field, value) => {
-    // Update both the activities array and the form data store
     setActivities(activities.map(activity => 
       activity.id === id ? { ...activity, [field]: value } : activity
     ));
     
-    // Update form data for this particular activity
     setActivityFormData(prevData => ({
       ...prevData,
       [id]: {
@@ -195,11 +165,9 @@ function App() {
   
   const handleSubmit = async () => {
     try {
-      // Get the current activity
       const currentActivity = activities[currentActivityIndex];
       if (!currentActivity) return;
       
-      // Check for missing required fields
       const hasMissingFields = checkForMissingFields(currentActivity);
       
       if (hasMissingFields) {
@@ -207,7 +175,6 @@ function App() {
         return;
       }
       
-      // Simple approach to detect duplicates - compare with last submission
       const lastSubmission = lastSubmissions[currentActivity.id];
       const fieldsToCompare = [
         'business_case', 'core', 'legal_requirement', 'risks', 'risk_tolerance',
@@ -218,15 +185,12 @@ function App() {
       let isDuplicate = false;
       
       if (lastSubmission) {
-        // Check if all fields match the last submission
         isDuplicate = fieldsToCompare.every(field => 
           lastSubmission[field] === (currentActivity[field] || '')
         );
       }
       
-      // If it's a duplicate, just show existing results without creating a new entry
       if (isDuplicate) {
-        // Just display all existing results
         const allResults = Object.values(activityResults).map((result, index) => ({
           ...result,
           sequentialNumber: index + 1,
@@ -239,63 +203,49 @@ function App() {
         return;
       }
       
-      // Store current form data as last submission
       setLastSubmissions(prev => ({
         ...prev,
         [currentActivity.id]: { ...currentActivity }
       }));
       
-      // Prepare request data for this activity
       const requestData = prepareRequestData(currentActivity);
       
       setIsLoading(true);
       
-      // Call API with retry logic
       const response = await makeApiCall(`${API_BASE_URL}/determine`, requestData);
       
-      // Store the result for this specific activity with a unique key and timestamp
       const result = response.data.results[0];
       
-      // Add timestamp if not already present
       if (!result.timestamp) {
         result.timestamp = new Date().toISOString();
       }
       
-      // Generate a unique key for this result
-      // Instead of using activity.id as the key, use a unique key for each submission
-      // This ensures updates are treated as new entries rather than replacing existing ones
       const uniqueKey = `${currentActivity.id}_${Date.now()}`;
       
-      // Create a new activity results object with the new result
       const updatedResults = {
         ...activityResults,
         [uniqueKey]: {
           ...result,
-          originalActivityId: currentActivity.id // Store original activity ID for reference
+          originalActivityId: currentActivity.id
         }
       };
       
-      // Update the activity results store
       setActivityResults(updatedResults);
       
-      // Collect all results to display them together
       const allResults = Object.values(updatedResults).map((resultItem, index) => ({
         ...resultItem,
         sequentialNumber: index + 1,
         timestamp: resultItem.timestamp || new Date().toISOString()
       }));
       
-      // Set all results and show results page
-      setResultsSource('submit'); // Set source as submission
+      setResultsSource('submit');
       setResults(allResults);
       setShowResults(true);
       
-      // Clear any notification
       if (notification) {
         setNotification(null);
       }
       
-      // Clear updating activity ID
       if (updatingActivityId) {
         setUpdatingActivityId(null);
       }
@@ -308,10 +258,8 @@ function App() {
   };
   
   const handleViewResults = () => {
-    // Collect all available results for all activities
     const allResults = [];
     
-    // Add a sequential number and ensure timestamp exists for each result
     Object.values(activityResults).forEach((result, index) => {
       allResults.push({
         ...result,
@@ -321,7 +269,7 @@ function App() {
     });
     
     if (allResults.length > 0) {
-      setResultsSource('viewButton'); // Set source as view button
+      setResultsSource('viewButton');
       setResults(allResults);
       setShowResults(true);
     } else {
@@ -330,20 +278,16 @@ function App() {
   };
   
   const handleUpdateOutcomes = (activityId) => {
-    // Find the activity to update based on the ID passed from ResultsDisplay
     const activityToUpdate = activities.find(activity => activity.id === activityId);
     
     if (activityToUpdate) {
-      // Set the updating ID and find the index to navigate to
       setUpdatingActivityId(activityToUpdate.id);
       
-      // Find and set the activity index
       const activityIndex = activities.findIndex(activity => activity.id === activityToUpdate.id);
       if (activityIndex >= 0) {
         setCurrentActivityIndex(activityIndex);
       }
     } else {
-      // Fallback to first activity
       setUpdatingActivityId(activities[0].id);
       setCurrentActivityIndex(0);
     }
@@ -354,15 +298,14 @@ function App() {
       message: 'Make your changes to the form and click Submit to update the results.'
     });
     
-    // Set a timeout to clear the notification after 5 seconds
+    // Reduced notification timeout from 5000ms to 3000ms
     setTimeout(() => {
       setNotification(null);
-    }, 5000);
+    }, 3000);
   };
   
   const handleBackToForm = () => {
     setShowResults(false);
-    // Reset results source when going back to form
     setResultsSource('submit');
   };
   
@@ -372,9 +315,7 @@ function App() {
       
       let blob;
       
-      // Prepare data for export based on whether we have results
       if (Object.keys(activityResults).length === 0) {
-        // If no results, export form data for all activities
         const requestData = {
           inputs: activities.map(activity => ({
             activity_name: activity.activity_name || 'Unnamed Activity',
@@ -394,7 +335,6 @@ function App() {
           }))
         };
         
-        // Use makeApiCall with retry logic and responseType option
         const response = await makeApiCall(
           `${API_BASE_URL}/export-excel`, 
           requestData, 
@@ -405,16 +345,13 @@ function App() {
           type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
         });
       } else {
-        // If we have results, export those instead
         const resultsArray = Object.values(activityResults);
         
-        // Add sequential numbers to each result
         const numberedResults = resultsArray.map((result, index) => ({
           ...result,
           sequentialNumber: index + 1
         }));
         
-        // Convert to the format expected by the backend
         const requestData = {
           inputs: numberedResults.map(result => ({
             activity_name: result.activity_name || 'Unnamed Activity',
@@ -437,7 +374,6 @@ function App() {
           }))
         };
         
-        // Use makeApiCall with retry logic and responseType option
         const response = await makeApiCall(
           `${API_BASE_URL}/export-excel`, 
           requestData, 
@@ -449,13 +385,13 @@ function App() {
         });
       }
       
-      // Create a link element and trigger download
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', 'sourcing_decisions.xlsx');
       document.body.appendChild(link);
       link.click();
+      window.URL.revokeObjectURL(url); // Clean up
       link.remove();
     } catch (error) {
       console.error('Error exporting Excel:', error);
@@ -525,9 +461,8 @@ function App() {
             results={results}
             onBackToForm={handleBackToForm}
             onExportExcel={handleExportExcel}
-            showUpdateButton={resultsSource === 'submit'} // Only show update button if from submit
+            showUpdateButton={resultsSource === 'submit'}
             onUpdateOutcomes={() => {
-              // Get the ID of the current activity shown in results
               if (results && results.length > 0) {
                 const activityName = results[0].activity_name;
                 const activityToUpdate = activities.find(activity => 
