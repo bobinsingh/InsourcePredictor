@@ -329,7 +329,7 @@ function App() {
     }
   }, [activityResults]);
   
-  // Renamed from handleUpdateOutcomes to handleEditForm
+  // handleEditForm
   const handleEditForm = useCallback((activityId) => {
     const activityToUpdate = activities.find(activity => activity.id === activityId);
     
@@ -345,10 +345,10 @@ function App() {
       setCurrentActivityIndex(0);
     }
     
-    // Only set notification once (without using setTimeout to avoid memory leaks)
+    // Updated notification message with clearer instructions
     setNotification({
       type: 'info',
-      message: 'Make your changes to the form and click Update to see the revised results.'
+      message: 'You are now in edit mode. Make your changes and click Submit button to save them, or click Cancel Edit to exit edit mode.'
     });
   }, [activities]);
   
@@ -363,13 +363,13 @@ function App() {
     }
   }, [notification]);
   
-  // Add new function to handle canceling edit
+  // CancelEdit
   const handleCancelEdit = useCallback(() => {
     setUpdatingActivityId(null);
     
     setNotification({
       type: 'info',
-      message: 'Edit mode canceled.'
+      message: 'Edit mode canceled. The form has been restored to its previous state.'
     });
   }, []);
   

@@ -163,6 +163,22 @@ const DecisionForm = ({
     return submittedActivityIds.includes(currentActivity.id);
   }, [activities, currentActivityIndex, updatingActivityId, submittedActivityIds]);
   
+  // Add logic to disable the submit button after canceling edit
+  const isSubmitButtonDisabled = useCallback(() => {
+    if (!activities || activities.length === 0 || currentActivityIndex >= activities.length) {
+      return true;
+    }
+    
+    const currentActivity = activities[currentActivityIndex];
+    if (!currentActivity) return true;
+    
+    // Enable Submit button if we're in edit mode for this activity
+    if (updatingActivityId === currentActivity.id) return false;
+    
+    // Disable Submit button if this activity has been submitted
+    return submittedActivityIds.includes(currentActivity.id);
+  }, [activities, currentActivityIndex, updatingActivityId, submittedActivityIds]);
+  
   const fieldLabels = {
     activity_name: 'Activity Name',
     activity_type: 'Activity Type',
@@ -244,11 +260,7 @@ const DecisionForm = ({
         <h2>Activity {currentActivityIndex + 1} of {activities.length}: Page {currentStep} of {totalSteps}</h2>
       </div>
       
-      {updatingActivityId === currentActivity.id && (
-        <div className="updating-notification info">
-          <p>You are updating this activity. Make your changes and click Update to see the revised results.</p>
-        </div>
-      )}
+      {/* Removed the duplicate notification here */}
       
       <div className="form-content-container">
         <div className="questions-panel">
@@ -356,6 +368,7 @@ const DecisionForm = ({
               type="button" 
               className="nav-button submit"
               onClick={handleFormSubmit}
+              disabled={isSubmitButtonDisabled()} // Added disabled property based on new function
             >
               {updatingActivityId === currentActivity.id && isActivityModified(currentActivity) 
                 ? 'Update' 
