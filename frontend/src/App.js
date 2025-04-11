@@ -49,7 +49,7 @@ function App() {
   const [updatingActivityId, setUpdatingActivityId] = useState(null);
   const [activityResults, setActivityResults] = useState({});
   const [activityFormData, setActivityFormData] = useState({});
-  const [resultsSource, setResultsSource] = useState('submit');
+  // Removed unused state variable
   const [lastSubmissions, setLastSubmissions] = useState({});
   const [submittedActivityIds, setSubmittedActivityIds] = useState([]);
   
@@ -60,7 +60,8 @@ function App() {
       initialFormData[activity.id] = { ...activity };
     });
     setActivityFormData(initialFormData);
-  }, []); // Only run once on mount
+    // Added activities to the dependency array
+  }, [activities]); 
   
   // Separate effect to update form data when activities change
   useEffect(() => {
@@ -70,7 +71,8 @@ function App() {
       updatedFormData[activity.id] = activityFormData[activity.id] || { ...activity };
     });
     setActivityFormData(updatedFormData);
-  }, [activities]); // Only triggered when activities array changes
+    // Added activityFormData to the dependency array
+  }, [activities, activityFormData]); 
   
   const handleAddActivity = useCallback(() => {
     const newId = activities.length > 0 ? Math.max(...activities.map(a => a.id)) + 1 : 1;
@@ -97,6 +99,9 @@ function App() {
       ...prevData,
       [newId]: { ...newActivity }
     }));
+    
+    // Return the new activity ID so it can be referenced
+    return newId;
   }, [activities]);
   
   const handleRemoveActivity = useCallback((id) => {
@@ -236,7 +241,6 @@ function App() {
           timestamp: result.timestamp || new Date().toISOString()
         }));
         
-        setResultsSource('submit');
         setResults(allResults);
         setShowResults(true);
         return;
@@ -273,8 +277,6 @@ function App() {
       if (!submittedActivityIds.includes(currentActivity.id)) {
         setSubmittedActivityIds(prev => [...prev, currentActivity.id]);
       }
-      
-      setResultsSource('submit');
       
       // Calculate all results after state updates
       const updatedResults = {
@@ -321,7 +323,6 @@ function App() {
     });
     
     if (allResults.length > 0) {
-      setResultsSource('viewButton');
       setResults(allResults);
       setShowResults(true);
     } else {
@@ -329,7 +330,7 @@ function App() {
     }
   }, [activityResults]);
   
-  // handleEditForm
+  // Renamed from handleUpdateOutcomes to handleEditForm
   const handleEditForm = useCallback((activityId) => {
     const activityToUpdate = activities.find(activity => activity.id === activityId);
     
@@ -348,7 +349,7 @@ function App() {
     // Updated notification message with clearer instructions
     setNotification({
       type: 'info',
-      message: 'You are now in edit mode. Make your changes and click Submit button to save them, or click Cancel Edit to exit edit mode.'
+      message: 'You are now in edit mode. Make your changes and click Update button to save them, or click Cancel Edit to discard changes.'
     });
   }, [activities]);
   
@@ -363,7 +364,7 @@ function App() {
     }
   }, [notification]);
   
-  // CancelEdit
+  // Add new function to handle canceling edit
   const handleCancelEdit = useCallback(() => {
     setUpdatingActivityId(null);
     
@@ -375,7 +376,6 @@ function App() {
   
   const handleBackToForm = useCallback(() => {
     setShowResults(false);
-    setResultsSource('submit');
     
     // Find a non-submitted activity if available
     const nonSubmittedActivityIndex = activities.findIndex(activity => 
@@ -387,7 +387,7 @@ function App() {
       setCurrentActivityIndex(nonSubmittedActivityIndex);
     } else if (activities.length === 1 && submittedActivityIds.includes(activities[0].id)) {
       // If we only have one activity and it's submitted, create a new one
-      const newActivity = handleAddActivity();
+      const newActivityId = handleAddActivity();
       // The new activity will become the last one, so set index accordingly
       setCurrentActivityIndex(activities.length); // This will point to the new activity
     }
